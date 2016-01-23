@@ -5,3 +5,6 @@
 *.egg
 *.egg-info
 .coverage
+/build/
+
+/dist/
