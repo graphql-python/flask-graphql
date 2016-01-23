@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="{{ url_for("static", filename="graphiql/graphiql.css") }}" />
-    <script src="{{ url_for("static", filename="graphiql/react.min.js") }}"></script>
-    <script src="{{ url_for("static", filename="graphiql/fetch.min.js") }}"></script>
-    <script src="{{ url_for("static", filename="graphiql/graphiql.min.js") }}"></script>
+    <link rel="stylesheet" href="{{ url_for("graphql.static", filename="graphiql.css") }}" />
+    <script src="{{ url_for("graphql.static", filename="react.min.js") }}"></script>
+    <script src="{{ url_for("graphql.static", filename="fetch.min.js") }}"></script>
+    <script src="{{ url_for("graphql.static", filename="graphiql.min.js") }}"></script>
   </head>
   <body>
     Loading...
@@ -81,9 +81,9 @@
           variables: parameters.variables,
           onEditQuery: onEditQuery,
           onEditVariables: onEditVariables,
-{% if default_query %}
-          defaultQuery: '{{ default_query }}',
-{% endif %}
+{%- if default_query %}
+          defaultQuery: {{ default_query|tojson }},
+{%- endif %}
         }),
         document.body
       );

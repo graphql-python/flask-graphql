@@ -10,7 +10,7 @@ A `Flask` package that provides two main views for operate with `GraphQL`:
 Use it like you would any other Flask View.
 
 ```python
-from flask_graphql import GraphQLView, GraphiQLView
+from graphql_flask import GraphQLView, GraphiQLView
 
 app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema))
 ```

@@ -20,6 +20,7 @@ class HttpError(Exception):
 class GraphQLView(View):
     schema = None
     executor = None
+    execute = None
     root_value = None
     pretty = False
 
@@ -31,8 +32,15 @@ class GraphQLView(View):
             if hasattr(self, key):
                 setattr(self, key, value)
 
-        if not self.executor:
+        inner_schema = getattr(self.schema, 'schema', None)
+        execute = getattr(self.schema, 'execute', None)
+        if execute:
+            self.execute = execute
+        elif not self.executor:
             self.executor = get_default_executor()
+
+        if inner_schema:
+            self.schema = inner_schema
 
         assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
 
@@ -103,7 +111,9 @@ class GraphQLView(View):
 
         return {}
 
-    def execute(self, *args, **kwargs):
+    def _execute(self, *args, **kwargs):
+        if self.execute:
+            return self.execute(*args, **kwargs)
         return self.executor.execute(self.schema, *args, **kwargs)
 
     def execute_graphql_request(self, request):
@@ -127,7 +137,7 @@ class GraphQLView(View):
                 ))
 
         try:
-            return self.execute(
+            return self._execute(
                 document_ast,
                 self.get_root_value(request),
                 variables,

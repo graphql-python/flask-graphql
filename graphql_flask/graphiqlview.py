@@ -3,7 +3,8 @@ from flask.views import View
 
 
 class GraphiQLView(View):
-    template_name = 'graphiql/index.html'
+    template_name = 'graphiql.html'
+    default_query = None
     methods = ['GET']
 
     def __init__(self, **kwargs):
@@ -13,4 +14,4 @@ class GraphiQLView(View):
                 setattr(self, key, value)
 
     def dispatch_request(self):
-        return render_template(self.template_name)
+        return render_template(self.template_name, default_query=self.default_query)
