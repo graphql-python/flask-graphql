@@ -25,9 +25,11 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'License :: OSI Approved :: MIT License',
     ],
-
     keywords='api graphql protocol rest flask',
     packages=find_packages(exclude=['tests']),
     install_requires=required_packages,
     tests_require=['pytest>=2.7.3'],
+    include_package_data=True,
+    zip_safe=False,
+    platforms='any',
 )
