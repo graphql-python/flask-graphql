@@ -1,6 +1,6 @@
 # `graphql-flask`
 
-[![Build Status](https://travis-ci.org/graphql-python/graphql-graphql-flask.svg?branch=master)](https://travis-ci.org/graphql-python/graphql-flask) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphql-flask/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphql-flask?branch=master) [![PyPI version](https://badge.fury.io/py/graphql-flask.svg)](https://badge.fury.io/py/graphql-flask)
+[![Build Status](https://travis-ci.org/graphql-python/graphql-flask.svg?branch=master)](https://travis-ci.org/graphql-python/graphql-flask) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphql-flask/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphql-flask?branch=master) [![PyPI version](https://badge.fury.io/py/graphql-flask.svg)](https://badge.fury.io/py/graphql-flask)
 
 A `Flask` package that provides two main views for operate with `GraphQL`:
 * `GraphQLView`: endpoint for expose the GraphQL schema
