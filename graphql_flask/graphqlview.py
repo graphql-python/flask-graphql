@@ -1,5 +1,5 @@
 import json
-from werkzeug.exceptions import BadRequest, MethodNotAllowed
+
 from flask import Response, request
 from flask.views import View
 from graphql.core import Source, parse
@@ -8,12 +8,13 @@ from graphql.core.execution import ExecutionResult, get_default_executor
 from graphql.core.type.schema import GraphQLSchema
 from graphql.core.utils.get_operation_ast import get_operation_ast
 import six
+from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 
 class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
         self.response = response
-        self.message = message = message or response.description.decode()
+        self.message = message = message or response.description
         super(HttpError, self).__init__(message, *args, **kwargs)
 
 

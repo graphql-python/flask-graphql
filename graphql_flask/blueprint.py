@@ -1,6 +1,6 @@
 from flask import Blueprint
-from .graphqlview import GraphQLView
 from .graphiqlview import GraphiQLView
+from .graphqlview import GraphQLView
 
 
 class GraphQL(object):

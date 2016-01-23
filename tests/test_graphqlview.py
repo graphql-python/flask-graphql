@@ -361,7 +361,7 @@ def test_handles_errors_caused_by_a_lack_of_query(client):
 
 
 def test_handles_invalid_json_bodies(client):
-    response = client.post(url_string(), '[]', content_type='application/json')
+    response = client.post(url_string(), data='[]', content_type='application/json')
 
     assert response.status_code == 400
     assert response_json(response) == {
@@ -370,7 +370,7 @@ def test_handles_invalid_json_bodies(client):
 
 
 def test_handles_incomplete_json_bodies(client):
-    response = client.post(url_string(), '{"query":', content_type='application/json')
+    response = client.post(url_string(), data='{"query":', content_type='application/json')
 
     assert response.status_code == 400
     assert response_json(response) == {

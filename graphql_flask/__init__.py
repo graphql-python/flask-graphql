@@ -1,5 +1,5 @@
 from .blueprint import GraphQL
-from .graphqlview import GraphQLView
 from .graphiqlview import GraphiQLView
+from .graphqlview import GraphQLView
 
 __all__ = ['GraphQL', 'GraphQLView', 'GraphiQLView']
