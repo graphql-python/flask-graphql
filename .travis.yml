@@ -1,0 +1,27 @@
+language: python
+sudo: false
+matrix:
+  include:
+    - python: "pypy"
+      env: TOX_ENV=pypy
+    - python: "2.7"
+      env: TOX_ENV=py27
+    - python: "3.3"
+      env: TOX_ENV=py33
+    - python: "3.4"
+      env: TOX_ENV=py34
+    - python: "3.5"
+      env: TOX_ENV=py35,import-order,flake8
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $TRAVIS_BUILD_DIR/.tox
+
+install:
+- pip install tox coveralls
+
+script:
+- tox -e $TOX_ENV -- --cov=graphql_flask
+after_success:
+- coveralls
