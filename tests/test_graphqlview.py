@@ -2,6 +2,11 @@ import pytest
 import json
 
 try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
@@ -420,3 +425,17 @@ def test_passes_request_into_request_context(client):
             'request': 'testing'
         }
     }
+
+def test_post_multipart_data(client):
+    query = 'mutation TestMutation { writeTest { test } }'
+    response = client.post(
+        url_string(),
+        data= {
+            'query': query,
+            'file': (StringIO(), 'text1.txt'),
+        },
+        content_type='multipart/form-data'
+    )
+
+    assert response.status_code == 200
+    assert response_json(response) == {'data': {u'writeTest': {u'test': u'Hello World'}}}

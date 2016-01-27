@@ -95,7 +95,6 @@ class GraphQLView(View):
     # noinspection PyBroadException
     def parse_body(self, request):
         content_type = self.get_content_type(request)
-
         if content_type == 'application/graphql':
             return {'query': request.data.decode()}
 
@@ -108,6 +107,9 @@ class GraphQLView(View):
                 raise HttpError(BadRequest('POST body sent invalid JSON.'))
 
         elif content_type == 'application/x-www-form-urlencoded':
+            return request.form
+
+        elif content_type == 'multipart/form-data':
             return request.form
 
         return {}
