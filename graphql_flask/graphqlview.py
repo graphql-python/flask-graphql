@@ -172,4 +172,6 @@ class GraphQLView(View):
 
     @staticmethod
     def get_content_type(request):
-        return request.content_type
+        # We use mimetype here since we don't need the other
+        # information provided by content_type
+        return request.mimetype
