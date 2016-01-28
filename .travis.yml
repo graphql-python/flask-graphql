@@ -22,6 +22,6 @@ install:
 - pip install tox coveralls
 
 script:
-- tox -e $TOX_ENV -- --cov=graphql_flask
+- tox -e $TOX_ENV -- --cov=flask_graphql
 after_success:
 - coveralls

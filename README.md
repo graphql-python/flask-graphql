@@ -1,4 +1,4 @@
-# GraphQL-Flask
+# Flask-GraphQL
 
 [![Build Status](https://travis-ci.org/graphql-python/graphql-flask.svg?branch=master)](https://travis-ci.org/graphql-python/graphql-flask) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphql-flask/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphql-flask?branch=master) [![PyPI version](https://badge.fury.io/py/graphql-flask.svg)](https://badge.fury.io/py/graphql-flask)
 
@@ -6,10 +6,10 @@ Adds GraphQL support to your Flask application.
 
 ## Usage
 
-Just create a `GraphQL` instance from `graphql_flask`
+Just create a `GraphQL` instance from `flask_graphql`
 
 ```python
-from graphql_flask import GraphQL
+from flask_graphql import GraphQL
 
 graphql_blueprint = GraphQL(app, schema=schema)
 ```
@@ -24,7 +24,7 @@ This package provides the following Views:
 
 You can also add only the views you want to use:
 ```python
-from graphql_flask import GraphQLView, GraphiQLView
+from flask_graphql import GraphQLView, GraphiQLView
 
 app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema))
 ```

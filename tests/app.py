@@ -1,5 +1,5 @@
 from flask import Flask
-from graphql_flask import GraphQL
+from flask_graphql import GraphQL
 from .schema import Schema
 
 def create_app(**kwargs):

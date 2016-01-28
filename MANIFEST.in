@@ -1,3 +1,3 @@
 include README.md
-recursive-include graphql_flask/static *
-recursive-include graphql_flask/templates *
+recursive-include flask_graphql/static *
+recursive-include flask_graphql/templates *
