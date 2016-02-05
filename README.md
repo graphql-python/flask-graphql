@@ -1,6 +1,6 @@
 # Flask-GraphQL
 
-[![Build Status](https://travis-ci.org/graphql-python/graphql-flask.svg?branch=master)](https://travis-ci.org/graphql-python/graphql-flask) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphql-flask/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphql-flask?branch=master) [![PyPI version](https://badge.fury.io/py/graphql-flask.svg)](https://badge.fury.io/py/graphql-flask)
+[![Build Status](https://travis-ci.org/graphql-python/flask-graphql.svg?branch=master)](https://travis-ci.org/graphql-python/flask-graphql) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphql-flask/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphql-flask?branch=master) [![PyPI version](https://badge.fury.io/py/graphql-flask.svg)](https://badge.fury.io/py/graphql-flask)
 
 Adds GraphQL support to your Flask application.
 
