@@ -1,9 +1,9 @@
-from graphql.core.type.definition import GraphQLArgument, GraphQLField, GraphQLNonNull, GraphQLObjectType
-from graphql.core.type.scalars import GraphQLString
-from graphql.core.type.schema import GraphQLSchema
+from graphql.type.definition import GraphQLArgument, GraphQLField, GraphQLNonNull, GraphQLObjectType
+from graphql.type.scalars import GraphQLString
+from graphql.type.schema import GraphQLSchema
 
 
-def resolve_raises(o, a, i):
+def resolve_raises(*_):
     raise Exception("Throws!")
 
 
@@ -12,13 +12,13 @@ QueryRootType = GraphQLObjectType(
     fields={
         'thrower': GraphQLField(GraphQLNonNull(GraphQLString), resolver=resolve_raises),
         'request': GraphQLField(GraphQLNonNull(GraphQLString),
-                                resolver=lambda obj, args, info: info.request_context.args.get('q')),
+                                resolver=lambda obj, args, context, info: context.args.get('q')),
         'test': GraphQLField(
             type=GraphQLString,
             args={
                 'who': GraphQLArgument(GraphQLString)
             },
-            resolver=lambda obj, args, info: 'Hello %s' % (args.get('who') or 'World')
+            resolver=lambda obj, args, context, info: 'Hello %s' % (args.get('who') or 'World')
         )
     }
 )

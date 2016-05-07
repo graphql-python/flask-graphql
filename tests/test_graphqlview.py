@@ -86,11 +86,11 @@ def test_reports_validation_errors(client):
     assert response_json(response) == {
         'errors': [
             {
-                'message': 'Cannot query field "unknownOne" on "QueryRoot".',
+                'message': 'Cannot query field "unknownOne" on type "QueryRoot".',
                 'locations': [{'line': 1, 'column': 9}]
             },
             {
-                'message': 'Cannot query field "unknownTwo" on "QueryRoot".',
+                'message': 'Cannot query field "unknownTwo" on type "QueryRoot".',
                 'locations': [{'line': 1, 'column': 21}]
             }
         ]

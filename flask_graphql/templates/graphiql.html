@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      width: 100%;
+    }
+  </style>
   <head>
     <link rel="stylesheet" href="{{ url_for("graphql.static", filename="graphiql.css") }}" />
     <script src="{{ url_for("graphql.static", filename="fetch.min.js") }}"></script>
@@ -53,7 +61,13 @@
         body: JSON.stringify(graphQLParams),
         credentials: 'include',
       }).then(function (response) {
-        return response.json();
+        return response.text();
+      }).then(function (responseBody) {
+        try {
+          return JSON.parse(responseBody);
+        } catch (error) {
+          return responseBody;
+        }
       });
     }
 
@@ -69,6 +83,11 @@
       updateURL();
     }
 
+    function onEditOperationName(newOperationName) {
+      parameters.operationName = newOperationName;
+      updateURL();
+    }
+
     function updateURL() {
       history.replaceState(null, null, locationQuery(parameters));
     }
@@ -79,12 +98,14 @@
         fetcher: graphQLFetcher,
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
+        onEditOperationName: onEditOperationName,
 {%- if default_query %}
           defaultQuery: {{ default_query|tojson }},
 {%- endif %}
-        query: undefined,
+        query: null,
         response: null,
-        variables: null
+        variables: null,
+        operationName: null,
       }),
       document.body
     );

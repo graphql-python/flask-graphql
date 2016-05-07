@@ -1,4 +1,5 @@
 from flask import Blueprint
+
 from .graphiqlview import GraphiQLView
 from .graphqlview import GraphQLView
 

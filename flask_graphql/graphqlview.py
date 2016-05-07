@@ -1,14 +1,16 @@
 import json
 
+import six
 from flask import Response, request
 from flask.views import View
-from graphql.core import Source, parse
-from graphql.core.error import GraphQLError, format_error as format_graphql_error
-from graphql.core.execution import ExecutionResult, get_default_executor
-from graphql.core.type.schema import GraphQLSchema
-from graphql.core.utils.get_operation_ast import get_operation_ast
-import six
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
+
+from graphql import Source, execute, parse, validate
+from graphql.error import format_error as format_graphql_error
+from graphql.error import GraphQLError
+from graphql.execution import ExecutionResult
+from graphql.type.schema import GraphQLSchema
+from graphql.utils.get_operation_ast import get_operation_ast
 
 
 class HttpError(Exception):
@@ -34,11 +36,7 @@ class GraphQLView(View):
                 setattr(self, key, value)
 
         inner_schema = getattr(self.schema, 'schema', None)
-        execute = getattr(self.schema, 'execute', None)
-        if execute:
-            self.execute = execute
-        elif not self.executor:
-            self.executor = get_default_executor()
+        self._execute = getattr(self.schema, 'execute', None)
 
         if inner_schema:
             self.schema = inner_schema
@@ -49,7 +47,7 @@ class GraphQLView(View):
     def get_root_value(self, request):
         return self.root_value
 
-    def get_request_context(self, request):
+    def get_context(self, request):
         return request
 
     def dispatch_request(self):
@@ -114,10 +112,10 @@ class GraphQLView(View):
 
         return {}
 
-    def _execute(self, *args, **kwargs):
-        if self.execute:
-            return self.execute(*args, **kwargs)
-        return self.executor.execute(self.schema, *args, **kwargs)
+    def execute(self, *args, **kwargs):
+        if self._execute:
+            return self._execute(*args, **kwargs)
+        return execute(self.schema, *args, **kwargs)
 
     def execute_graphql_request(self, request):
         query, variables, operation_name = self.get_graphql_params(request, self.parse_body(request))
@@ -129,6 +127,12 @@ class GraphQLView(View):
 
         try:
             document_ast = parse(source)
+            validation_errors = validate(self.schema, document_ast)
+            if validation_errors:
+                return ExecutionResult(
+                    errors=validation_errors,
+                    invalid=True,
+                )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
@@ -140,12 +144,12 @@ class GraphQLView(View):
                 ))
 
         try:
-            return self._execute(
+            return self.execute(
                 document_ast,
-                self.get_root_value(request),
-                variables,
+                root_value=self.get_root_value(request),
+                variable_values=variables,
                 operation_name=operation_name,
-                request_context=self.get_request_context(request)
+                context_value=self.get_context(request)
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
