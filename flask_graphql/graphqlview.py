@@ -12,6 +12,8 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.utils.get_operation_ast import get_operation_ast
 
+from .render_graphiql import render_graphiql
+
 
 class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
@@ -23,9 +25,11 @@ class HttpError(Exception):
 class GraphQLView(View):
     schema = None
     executor = None
-    execute = None
     root_value = None
+    context = None
     pretty = False
+    graphiql = False
+    graphiql_version = None
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
 
@@ -36,7 +40,8 @@ class GraphQLView(View):
                 setattr(self, key, value)
 
         inner_schema = getattr(self.schema, 'schema', None)
-        self._execute = getattr(self.schema, 'execute', None)
+        if not self.executor:
+            self.executor = getattr(self.schema, 'executor', None)
 
         if inner_schema:
             self.schema = inner_schema
@@ -55,21 +60,47 @@ class GraphQLView(View):
             if request.method.lower() not in ('get', 'post'):
                 raise HttpError(MethodNotAllowed(['GET', 'POST'], 'GraphQL only supports GET and POST requests.'))
 
-            execution_result = self.execute_graphql_request(request)
-            response = {}
+            data = self.parse_body(request)
+            show_graphiql = self.graphiql and self.can_display_graphiql(data)
 
-            if execution_result.errors:
-                response['errors'] = [self.format_error(e) for e in execution_result.errors]
+            query, variables, operation_name = self.get_graphql_params(request, data)
 
-            if execution_result.invalid:
-                status_code = 400
+            execution_result = self.execute_graphql_request(
+                data,
+                query,
+                variables,
+                operation_name,
+                show_graphiql
+            )
+
+            if execution_result:
+                response = {}
+
+                if execution_result.errors:
+                    response['errors'] = [self.format_error(e) for e in execution_result.errors]
+
+                if execution_result.invalid:
+                    status_code = 400
+                else:
+                    status_code = 200
+                    response['data'] = execution_result.data
+
+                result = self.json_encode(request, response)
             else:
-                status_code = 200
-                response['data'] = execution_result.data
+                result = None
+
+            if show_graphiql:
+                return render_graphiql(
+                    graphiql_version=self.graphiql_version,
+                    query=query,
+                    variables=variables,
+                    operation_name=operation_name,
+                    result=result
+                )
 
             return Response(
                 status=status_code,
-                response=self.json_encode(request, response),
+                response=result,
                 content_type='application/json'
             )
 
@@ -113,21 +144,18 @@ class GraphQLView(View):
         return {}
 
     def execute(self, *args, **kwargs):
-        if self._execute:
-            return self._execute(*args, **kwargs)
         return execute(self.schema, *args, **kwargs)
 
-    def execute_graphql_request(self, request):
-        query, variables, operation_name = self.get_graphql_params(request, self.parse_body(request))
-
+    def execute_graphql_request(self, data, query, variables, operation_name, show_graphiql=False):
         if not query:
+            if show_graphiql:
+                return None
             raise HttpError(BadRequest('Must provide query string.'))
 
-        source = Source(query, name='GraphQL request')
-
         try:
-            document_ast = parse(source)
-            validation_errors = validate(self.schema, document_ast)
+            source = Source(query, name='GraphQL request')
+            ast = parse(source)
+            validation_errors = validate(self.schema, ast)
             if validation_errors:
                 return ExecutionResult(
                     errors=validation_errors,
@@ -137,22 +165,38 @@ class GraphQLView(View):
             return ExecutionResult(errors=[e], invalid=True)
 
         if request.method.lower() == 'get':
-            operation_ast = get_operation_ast(document_ast, operation_name)
+            operation_ast = get_operation_ast(ast, operation_name)
             if operation_ast and operation_ast.operation != 'query':
+                if show_graphiql:
+                    return None
                 raise HttpError(MethodNotAllowed(
                     ['POST'], 'Can only perform a {} operation from a POST request.'.format(operation_ast.operation)
                 ))
 
         try:
             return self.execute(
-                document_ast,
+                ast,
                 root_value=self.get_root_value(request),
-                variable_values=variables,
+                variable_values=variables or {},
                 operation_name=operation_name,
-                context_value=self.get_context(request)
+                context_value=self.get_context(request),
+                executor=self.executor
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
+
+    @classmethod
+    def can_display_graphiql(cls, data):
+        raw = 'raw' in request.args or 'raw' in data
+        return not raw and cls.request_wants_html(request)
+
+    @classmethod
+    def request_wants_html(cls, request):
+        best = request.accept_mimetypes \
+            .best_match(['application/json', 'text/html'])
+        return best == 'text/html' and \
+            request.accept_mimetypes[best] > \
+            request.accept_mimetypes['application/json']
 
     @staticmethod
     def get_graphql_params(request, data):

@@ -1,5 +1,18 @@
+from flask import render_template_string
+
+
+GRAPHIQL_VERSION = '0.7.1'
+
+TEMPLATE = '''<!--
+The request to this GraphQL server provided the header "Accept: text/html"
+and as a result has been presented GraphiQL - an in-browser IDE for
+exploring GraphQL.
+If you wish to receive JSON, provide the header "Accept: application/json" or
+add "&raw" to the end of the URL within a browser.
+-->
 <!DOCTYPE html>
 <html>
+<head>
   <style>
     html, body {
       height: 100%;
@@ -8,13 +21,12 @@
       width: 100%;
     }
   </style>
-  <head>
-    <link rel="stylesheet" href="{{ url_for("graphql.static", filename="graphiql.css") }}" />
-    <script src="{{ url_for("graphql.static", filename="fetch.min.js") }}"></script>
-    <script src="{{ url_for("graphql.static", filename="react.min.js") }}"></script>
-    <script src="{{ url_for("graphql.static", filename="react-dom.min.js") }}"></script>
-    <script src="{{ url_for("graphql.static", filename="graphiql.min.js") }}"></script>
-  </head>
+  <link href="//cdn.jsdelivr.net/graphiql/{{graphiql_version}}/graphiql.css" rel="stylesheet" />
+  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
+  <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
+  <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
+  <script src="//cdn.jsdelivr.net/graphiql/{{graphiql_version}}/graphiql.min.js"></script>
+</head>
 <body>
   <script>
     // Collect the URL parameters
@@ -48,7 +60,7 @@
         otherParams[k] = parameters[k];
       }
     }
-    var fetchURL = "{{ url_for('graphql') }}";
+    var fetchURL = locationQuery(otherParams);
 
     // Defines a GraphQL fetcher using the fetch API.
     function graphQLFetcher(graphQLParams) {
@@ -93,23 +105,26 @@
     }
 
     // Render <GraphiQL /> into the body.
-    React.render(
+    ReactDOM.render(
       React.createElement(GraphiQL, {
         fetcher: graphQLFetcher,
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
-{%- if default_query %}
-          defaultQuery: {{ default_query|tojson }},
-{%- endif %}
-        query: null,
-        response: null,
-        variables: null,
-        operationName: null,
+        query: {{ query|tojson }},
+        response: {{ result|tojson }},
+        variables: {{ variables|tojson }},
+        operationName: {{ operation_name|tojson }},
       }),
       document.body
     );
   </script>
 </body>
-</html>
+</html>'''
 
+
+def render_graphiql(graphiql_version=None, **kwargs):
+    if not graphiql_version:
+        graphiql_version = GRAPHIQL_VERSION
+
+    return render_template_string(TEMPLATE, graphiql_version=graphiql_version, **kwargs)
