@@ -129,7 +129,7 @@ class GraphQLView(View):
 
         elif content_type == 'application/json':
             try:
-                request_json = json.loads(request.data.decode())
+                request_json = json.loads(request.data.decode('utf8'))
                 assert isinstance(request_json, dict)
                 return request_json
             except:
