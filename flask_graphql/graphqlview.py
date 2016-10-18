@@ -30,6 +30,7 @@ class GraphQLView(View):
     pretty = False
     graphiql = False
     graphiql_version = None
+    middleware = None
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
 
@@ -180,6 +181,7 @@ class GraphQLView(View):
                 variable_values=variables or {},
                 operation_name=operation_name,
                 context_value=self.get_context(request),
+                middleware=self.middleware,
                 executor=self.executor
             )
         except Exception as e:
