@@ -40,13 +40,6 @@ class GraphQLView(View):
             if hasattr(self, key):
                 setattr(self, key, value)
 
-        inner_schema = getattr(self.schema, 'schema', None)
-        if not self.executor:
-            self.executor = getattr(self.schema, 'executor', None)
-
-        if inner_schema:
-            self.schema = inner_schema
-
         assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
 
     # noinspection PyUnusedLocal
@@ -55,6 +48,12 @@ class GraphQLView(View):
 
     def get_context(self, request):
         return request
+
+    def get_middleware(self, request):
+        return self.middleware
+
+    def get_executor(self, request):
+        return self.executor
 
     def dispatch_request(self):
         try:
@@ -181,8 +180,8 @@ class GraphQLView(View):
                 variable_values=variables or {},
                 operation_name=operation_name,
                 context_value=self.get_context(request),
-                middleware=self.middleware,
-                executor=self.executor
+                middleware=self.get_middleware(request),
+                executor=self.get_executor(request)
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
