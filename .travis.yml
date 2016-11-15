@@ -2,26 +2,30 @@ language: python
 sudo: false
 matrix:
   include:
-    - python: "pypy"
-      env: TOX_ENV=pypy
-    - python: "2.7"
-      env: TOX_ENV=py27
-    - python: "3.3"
-      env: TOX_ENV=py33
-    - python: "3.4"
-      env: TOX_ENV=py34
-    - python: "3.5"
-      env: TOX_ENV=py35,import-order,flake8
-
+  - python: pypy
+    env: TOX_ENV=pypy
+  - python: '2.7'
+    env: TOX_ENV=py27
+  - python: '3.3'
+    env: TOX_ENV=py33
+  - python: '3.4'
+    env: TOX_ENV=py34
+  - python: '3.5'
+    env: TOX_ENV=py35,import-order,flake8
 cache:
   directories:
-    - $HOME/.cache/pip
-    - $TRAVIS_BUILD_DIR/.tox
-
+  - $HOME/.cache/pip
+  - $TRAVIS_BUILD_DIR/.tox
 install:
 - pip install tox coveralls
-
 script:
 - tox -e $TOX_ENV -- --cov=flask_graphql
 after_success:
 - coveralls
+deploy:
+  provider: pypi
+  user: syrusakbary
+  on:
+    tags: true
+  password:
+    secure: GB3YHihKAbmfh9kzMxzsZQDMf5h1aIJYwESfaYMc4DjMA1Qms+ZhBN2RiH3irwJ6FW47ZsS/O6ZsrlNxu75J/Mc1NJfzFev1d0xt7cYp+s0umYHhheelR6wmP8KOt3ugK7qmWuk5bykljpxsRKzKJCvGH+LOM7mDQy3NZOfYPTAM2znWjuBr+X4iUv6pUCKk5N20GBbs9T+jNttE7K8TH4zuXCWxgbE7xVHth76pB5Q/9FZkB8hZQ7K2esO3QyajDO7FzsOk8Z/jXRJ3MOxZCI3vGgmSzKTH4fMqmSrtyr1sCaBO5tgS8ytqQBjsuV1vIWl+75bXrAXfdkin63zMne4Rsb+uSWj3djP+iy2yML8a2mWMizxr803v8lwaGnMZ26f4rwdZnHGUPlTp3geVKq23vidVTQwF8v2o1rHvtdD4KJ5Mi41TXAfnih3XUf+fCTXdbAXKqweDuhcZg09/r7U/6zo76wjnt1cePPZe63/xG6bAVQ+Gz1J+HZz55ofDZV9g9kwyNll4Jfdzj9hUHO8AfBMvXQJewRj/LbzbmbBp5peov+DFhx7TWofvqxjreVKxDiDN89pC+WKy5BwZMcpB3dRVGuZ25ZrENLgoTX7W4PHPb1+OF4edP6xM44egcJLamk7vhvpZQqukJGRQZFtIMw8KIkC7OWzpCFIXN08=
