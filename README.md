@@ -23,8 +23,8 @@ This will add `/graphql` and `/graphiql` endpoints to your app.
  * `root_value`: The `root_value` you want to provide to `executor.execute`.
  * `pretty`: Whether or not you want the response to be pretty printed JSON.
  * `executor`: The `Executor` that you want to use to execute queries.
- * `graphiql`: If `True`, may present [GraphiQL](https://github.com/graphql/graphiql) when loaded directly
-    from a browser (a useful tool for debugging and exploration).
+ * `graphiql`: If `True`, may present [GraphiQL](https://github.com/graphql/graphiql) when loaded directly from a browser (a useful tool for debugging and exploration).
+ * `graphiql_template`: Inject a Jinja template string to customize GraphiQL.
 
 You can also subclass `GraphQLView` and overwrite `get_root_value(self, request)` to have a dynamic root value
 per request.

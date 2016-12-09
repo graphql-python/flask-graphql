@@ -123,8 +123,9 @@ add "&raw" to the end of the URL within a browser.
 </html>'''
 
 
-def render_graphiql(graphiql_version=None, **kwargs):
-    if not graphiql_version:
-        graphiql_version = GRAPHIQL_VERSION
+def render_graphiql(graphiql_version=None, graphiql_template=None, **kwargs):
+    graphiql_version = graphiql_version or GRAPHIQL_VERSION
+    template = graphiql_template or TEMPLATE
 
-    return render_template_string(TEMPLATE, graphiql_version=graphiql_version, **kwargs)
+    return render_template_string(
+        template, graphiql_version=graphiql_version, **kwargs)
