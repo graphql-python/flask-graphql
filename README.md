@@ -27,6 +27,7 @@ This will add `/graphql` and `/graphiql` endpoints to your app.
  * `executor`: The `Executor` that you want to use to execute queries.
  * `graphiql`: If `True`, may present [GraphiQL](https://github.com/graphql/graphiql) when loaded directly from a browser (a useful tool for debugging and exploration).
  * `graphiql_template`: Inject a Jinja template string to customize GraphiQL.
+ * `batch`: Set the GraphQL view as batch (for using in [Apollo-Client](http://dev.apollodata.com/core/network.html#query-batching) or [ReactRelayNetworkLayer](https://github.com/nodkz/react-relay-network-layer))
 
 You can also subclass `GraphQLView` and overwrite `get_root_value(self, request)` to have a dynamic root value
 per request.
