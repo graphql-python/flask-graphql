@@ -30,6 +30,7 @@ class GraphQLView(View):
     pretty = False
     graphiql = False
     graphiql_version = None
+    graphiql_template = None
     middleware = None
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
@@ -92,6 +93,7 @@ class GraphQLView(View):
             if show_graphiql:
                 return render_graphiql(
                     graphiql_version=self.graphiql_version,
+                    graphiql_template=self.graphiql_template,
                     query=query,
                     variables=variables,
                     operation_name=operation_name,
