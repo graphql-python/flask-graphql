@@ -327,6 +327,15 @@ def test_supports_pretty_printing(client):
     )
 
 
+@pytest.mark.parametrize('app', [create_app(pretty=False)])
+def test_not_pretty_by_default(client):
+    response = client.get(url_string(query='{test}'))
+
+    assert response.data.decode() == (
+        '{"data":{"test":"Hello World"}}'
+    )
+
+
 def test_supports_pretty_printing_by_request(client):
     response = client.get(url_string(query='{test}', pretty='1'))
 

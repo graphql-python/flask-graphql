@@ -133,14 +133,15 @@ class GraphQLView(View):
                     'status': status_code,
                 }
 
-            result = self.json_encode(request, response)
+            result = self.json_encode(request, response, show_graphiql)
         else:
             result = None
 
         return result, status_code
 
-    def json_encode(self, request, d):
-        if not self.pretty and not request.args.get('pretty'):
+    def json_encode(self, request, d, show_graphiql=False):
+        pretty = self.pretty or show_graphiql or request.args.get('pretty')
+        if not pretty:
             return json.dumps(d, separators=(',', ':'))
 
         return json.dumps(d, sort_keys=True,
