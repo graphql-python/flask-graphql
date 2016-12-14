@@ -33,6 +33,8 @@ def response_json(response):
 
 
 j = lambda **kwargs: json.dumps(kwargs)
+jl = lambda **kwargs: json.dumps([kwargs])
+
 
 def test_allows_get_with_query_param(client):
     response = client.get(url_string(query='{test}'))
@@ -453,3 +455,71 @@ def test_post_multipart_data(client):
 
     assert response.status_code == 200
     assert response_json(response) == {'data': {u'writeTest': {u'test': u'Hello World'}}}
+
+
+@pytest.mark.parametrize('app', [create_app(batch=True)])
+def test_batch_allows_post_with_json_encoding(client):
+    response = client.post(
+        url_string(),
+        data=jl(id=1, query='{test}'),
+        content_type='application/json'
+    )
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': { 'data': {'test': "Hello World"} },
+        'status': 200,
+    }]
+
+
+@pytest.mark.parametrize('app', [create_app(batch=True)])
+def test_batch_supports_post_json_query_with_json_variables(client):
+    response = client.post(
+        url_string(),
+        data=jl(
+            id=1,
+            query='query helloWho($who: String){ test(who: $who) }',
+            variables={'who': "Dolly"}
+        ),
+        content_type='application/json'
+    )
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': { 'data': {'test': "Hello Dolly"} },
+        'status': 200,
+    }]
+ 
+          
+@pytest.mark.parametrize('app', [create_app(batch=True)])
+def test_batch_allows_post_with_operation_name(client):
+    response = client.post(
+        url_string(),
+        data=jl(
+            id=1,
+            query='''
+            query helloYou { test(who: "You"), ...shared }
+            query helloWorld { test(who: "World"), ...shared }
+            query helloDolly { test(who: "Dolly"), ...shared }
+            fragment shared on QueryRoot {
+              shared: test(who: "Everyone")
+            }
+            ''',
+            operationName='helloWorld'
+        ),
+        content_type='application/json'
+    )
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': {
+            'data': {
+                'test': 'Hello World',
+                'shared': 'Hello Everyone'
+            }
+        },
+        'status': 200,
+    }]
