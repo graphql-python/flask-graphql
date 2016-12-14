@@ -426,6 +426,20 @@ def test_passes_request_into_request_context(client):
         }
     }
 
+
+@pytest.mark.parametrize('app', [create_app(context="CUSTOM CONTEXT")])
+def test_supports_pretty_printing(client):
+    response = client.get(url_string(query='{context}'))
+
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {
+            'context': 'CUSTOM CONTEXT'
+        }
+    }
+
+
 def test_post_multipart_data(client):
     query = 'mutation TestMutation { writeTest { test } }'
     response = client.post(

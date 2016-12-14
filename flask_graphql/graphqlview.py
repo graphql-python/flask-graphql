@@ -48,7 +48,9 @@ class GraphQLView(View):
         return self.root_value
 
     def get_context(self, request):
-        return self.context or request
+        if self.context is not None:
+            return self.context
+        return request
 
     def get_middleware(self, request):
         return self.middleware
