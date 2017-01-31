@@ -21,6 +21,7 @@ add "&raw" to the end of the URL within a browser.
       width: 100%;
     }
   </style>
+  <meta name="referrer" content="no-referrer">
   <link href="//cdn.jsdelivr.net/graphiql/{{graphiql_version}}/graphiql.css" rel="stylesheet" />
   <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
   <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
