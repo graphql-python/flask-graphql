@@ -33,6 +33,7 @@ class GraphQLView(View):
     graphiql_template = None
     middleware = None
     batch = False
+    json_encoder = None
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
 
@@ -142,10 +143,10 @@ class GraphQLView(View):
     def json_encode(self, request, d, show_graphiql=False):
         pretty = self.pretty or show_graphiql or request.args.get('pretty')
         if not pretty:
-            return json.dumps(d, separators=(',', ':'))
+            return json.dumps(d, separators=(',', ':'), cls=self.json_encoder)
 
-        return json.dumps(d, sort_keys=True,
-                          indent=2, separators=(',', ': '))
+        return json.dumps(d, sort_keys=True, indent=2,
+                          separators=(',', ': '), cls=self.json_encoder)
 
     # noinspection PyBroadException
     def parse_body(self, request):

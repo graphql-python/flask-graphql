@@ -12,6 +12,7 @@ except ImportError:
     from urllib.parse import urlencode
 
 from .app import create_app
+from .encoder import TestJSONEncoder
 from flask import url_for
 
 
@@ -500,8 +501,8 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         'payload': { 'data': {'test': "Hello Dolly"} },
         'status': 200,
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(
@@ -532,3 +533,11 @@ def test_batch_allows_post_with_operation_name(client):
         },
         'status': 200,
     }]
+
+
+@pytest.mark.parametrize('app', [create_app(json_encoder=TestJSONEncoder)])
+def test_custom_encoder(client):
+    response = client.get(url_string(query='{test}'))
+
+    # TestJSONEncoder just encodes everything to 'TESTSTRING'
+    assert response.data.decode() == 'TESTSTRING'
