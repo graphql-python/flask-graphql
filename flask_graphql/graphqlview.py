@@ -34,6 +34,7 @@ class GraphQLView(View):
     middleware = None
     batch = False
     json_encoder = None
+    json_decoder = None
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
 
@@ -156,7 +157,7 @@ class GraphQLView(View):
 
         elif content_type == 'application/json':
             try:
-                request_json = json.loads(request.data.decode('utf8'))
+                request_json = json.loads(request.data.decode('utf8'), cls=self.json_decoder)
                 if self.batch:
                     assert isinstance(request_json, list)
                 else:

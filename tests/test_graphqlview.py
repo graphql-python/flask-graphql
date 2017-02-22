@@ -12,7 +12,7 @@ except ImportError:
     from urllib.parse import urlencode
 
 from .app import create_app
-from .encoder import TestJSONEncoder
+from .encoder import TestJSONEncoder, TestJSONDecoder
 from flask import url_for
 
 
@@ -541,3 +541,15 @@ def test_custom_encoder(client):
 
     # TestJSONEncoder just encodes everything to 'TESTSTRING'
     assert response.data.decode() == 'TESTSTRING'
+
+
+@pytest.mark.parametrize('app', [create_app(json_decoder=TestJSONDecoder)])
+def test_custom_decoder(client):
+    # The submitted data here of 'TEST' is clearly not valid JSON. The TestJSONDecoder will
+    # decode this into valid JSON with a valid gql query.
+    response = client.post(url_string(), data='TEST', content_type='application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
