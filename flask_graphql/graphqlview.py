@@ -60,6 +60,13 @@ class GraphQLView(View):
     def get_executor(self, request):
         return self.executor
 
+    def render_graphiql(self, **kwargs):
+        return render_graphiql(
+            graphiql_version=self.graphiql_version,
+            graphiql_template=self.graphiql_template,
+            **kwargs
+        ):
+
     def dispatch_request(self):
         try:
             if request.method.lower() not in ('get', 'post'):
@@ -77,9 +84,7 @@ class GraphQLView(View):
 
             if show_graphiql:
                 query, variables, operation_name, id = self.get_graphql_params(request, data)
-                return render_graphiql(
-                    graphiql_version=self.graphiql_version,
-                    graphiql_template=self.graphiql_template,
+                return self.render_graphiql(
                     query=query,
                     variables=variables,
                     operation_name=operation_name,
