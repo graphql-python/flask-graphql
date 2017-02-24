@@ -65,7 +65,7 @@ class GraphQLView(View):
             graphiql_version=self.graphiql_version,
             graphiql_template=self.graphiql_template,
             **kwargs
-        ):
+        )
 
     def dispatch_request(self):
         try:
