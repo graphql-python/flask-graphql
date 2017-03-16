@@ -1,4 +1,5 @@
 import json
+from promise import Promise
 
 import six
 from flask import Response, request
@@ -16,10 +17,12 @@ from .render_graphiql import render_graphiql
 
 
 class HttpError(Exception):
-    def __init__(self, response, message=None, *args, **kwargs):
-        self.response = response
-        self.message = message = message or response.description
-        super(HttpError, self).__init__(message, *args, **kwargs)
+    def __init__(self, status_code, message=None, is_graphql_error=False, headers=None):
+        self.status_code = status_code
+        self.message = message
+        self.is_graphql_error = is_graphql_error
+        self.headers = headers
+        super(HttpError, self).__init__(message)
 
 
 class GraphQLView(View):
@@ -42,7 +45,6 @@ class GraphQLView(View):
             if hasattr(self, key):
                 setattr(self, key, value)
 
-        assert not all((self.graphiql, self.batch)), 'Use either graphiql or batch processing'
         assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
 
     # noinspection PyUnusedLocal
@@ -70,27 +72,39 @@ class GraphQLView(View):
     def dispatch_request(self):
         try:
             if request.method.lower() not in ('get', 'post'):
-                raise HttpError(MethodNotAllowed(['GET', 'POST'], 'GraphQL only supports GET and POST requests.'))
+                raise HttpError(
+                    405,
+                    'GraphQL only supports GET and POST requests.',
+                    headers={
+                        'Allow': ['GET, POST']
+                    }
+                )
 
             data = self.parse_body(request)
 
             show_graphiql = self.graphiql and self.can_display_graphiql(data)
 
-            if isinstance(data, list):
+            is_batch = isinstance(data, list)
+            if is_batch:
                 if not self.batch or show_graphiql:
-                    raise HttpError(BadRequest('Batch requests are not allowed.'))
-
-                responses = [self.get_response(request, entry) for entry in data]
-                response, status_codes = zip(*responses)
-                status_code = max(status_codes)
+                    raise HttpError(
+                        400,
+                        'Batch requests are not allowed.'
+                    )
             else:
-                response, status_code = self.get_response(request, data, show_graphiql)
+                data = [data]
+            responses = [self.get_response(request, entry, show_graphiql) for entry in data]
+            response, status_codes = zip(*responses)
+            status_code = max(status_codes)
+
+            if not is_batch:
+                response = response[0]
 
             pretty = self.pretty or show_graphiql or request.args.get('pretty')
             result = self.json_encode(response, pretty)
 
             if show_graphiql:
-                query, variables, operation_name, id = self.get_graphql_params(request, data)
+                query, variables, operation_name, id = self.get_graphql_params(request, data[0])
                 return self.render_graphiql(
                     query=query,
                     variables=variables,
@@ -109,14 +123,13 @@ class GraphQLView(View):
                 self.json_encode({
                     'errors': [self.format_error(e)]
                 }),
-                status=e.response.code,
-                headers={'Allow': ['GET, POST']},
+                status=e.status_code,
+                headers=e.headers,
                 content_type='application/json'
             )
 
     def get_response(self, request, data, show_graphiql=False):
         query, variables, operation_name, id = self.get_graphql_params(request, data)
-
         execution_result = self.execute_graphql_request(
             data,
             query,
@@ -124,7 +137,9 @@ class GraphQLView(View):
             operation_name,
             show_graphiql
         )
+        return self.format_execution_result(execution_result, id)
 
+    def format_execution_result(self, execution_result, id):
         status_code = 200
         if execution_result:
             response = {}
@@ -164,7 +179,10 @@ class GraphQLView(View):
             try:
                 return json.loads(request.data.decode('utf8'))
             except:
-                raise HttpError(BadRequest('POST body sent invalid JSON.'))
+                raise HttpError(
+                    400,
+                    'POST body sent invalid JSON.'
+                )
 
         elif content_type == 'application/x-www-form-urlencoded':
             return request.form
@@ -181,7 +199,7 @@ class GraphQLView(View):
         if not query:
             if show_graphiql:
                 return None
-            raise HttpError(BadRequest('Must provide query string.'))
+            raise HttpError(400, 'Must provide query string.')
 
         try:
             source = Source(query, name='GraphQL request')
@@ -200,9 +218,13 @@ class GraphQLView(View):
             if operation_ast and operation_ast.operation != 'query':
                 if show_graphiql:
                     return None
-                raise HttpError(MethodNotAllowed(
-                    ['POST'], 'Can only perform a {} operation from a POST request.'.format(operation_ast.operation)
-                ))
+                raise HttpError(
+                    405,
+                    'Can only perform a {} operation from a POST request.'.format(operation_ast.operation),
+                    headers={
+                        'Allow': ['POST'],
+                    }
+                )
 
         try:
             return self.execute(
@@ -234,13 +256,13 @@ class GraphQLView(View):
     def get_graphql_params(request, data):
         query = request.args.get('query') or data.get('query')
         variables = request.args.get('variables') or data.get('variables')
-        id = request.args.get('id') or data.get('id')
+        id = data.get('id')
 
         if variables and isinstance(variables, six.text_type):
             try:
                 variables = json.loads(variables)
             except:
-                raise HttpError(BadRequest('Variables are invalid JSON.'))
+                raise HttpError(400, 'Variables are invalid JSON.')
 
         operation_name = request.args.get('operationName') or data.get('operationName')
 
