@@ -71,7 +71,8 @@ class GraphQLView(View):
 
     def dispatch_request(self):
         try:
-            if request.method.lower() not in ('get', 'post'):
+            request_method = request.method.lower()
+            if request_method not in ('get', 'post'):
                 raise HttpError(
                     405,
                     'GraphQL only supports GET and POST requests.',
@@ -95,7 +96,15 @@ class GraphQLView(View):
                     'Batch requests are not allowed.'
                 )
 
-            responses = [self.get_response(request, entry, show_graphiql) for entry in data]
+            only_allow_query = request_method == 'get'
+
+            responses = [self.get_response(
+                self.execute,
+                entry,
+                show_graphiql,
+                only_allow_query,
+            ) for entry in data]
+
             response, status_codes = zip(*responses)
             status_code = max(status_codes)
 
@@ -106,7 +115,7 @@ class GraphQLView(View):
             result = self.json_encode(response, pretty)
 
             if show_graphiql:
-                query, variables, operation_name, id = self.get_graphql_params(request, data[0])
+                query, variables, operation_name, id = self.get_graphql_params(data[0])
                 return self.render_graphiql(
                     query=query,
                     variables=variables,
@@ -130,15 +139,23 @@ class GraphQLView(View):
                 content_type='application/json'
             )
 
-    def get_response(self, request, data, show_graphiql=False):
-        query, variables, operation_name, id = self.get_graphql_params(request, data)
-        execution_result = self.execute_graphql_request(
-            data,
-            query,
-            variables,
-            operation_name,
-            show_graphiql
-        )
+    def get_response(self, execute, data, show_graphiql=False, only_allow_query=False):
+        query, variables, operation_name, id = self.get_graphql_params(data)
+        try:
+            execution_result = self.execute_graphql_request(
+                self.schema,
+                execute,
+                data,
+                query,
+                variables,
+                operation_name,
+                only_allow_query,
+            )
+        except HttpError:
+            if show_graphiql:
+                execution_result = None
+            else:
+                raise
         return self.format_execution_result(execution_result, id)
 
     def format_execution_result(self, execution_result, id):
@@ -163,20 +180,11 @@ class GraphQLView(View):
 
         return response, status_code
 
-    @staticmethod
-    def json_encode(data, pretty=False):
-        if not pretty:
-            return json.dumps(data, separators=(',', ':'))
-
-        return json.dumps(
-            data,
-            indent=2,
-            separators=(',', ': ')
-        )
-
     # noinspection PyBroadException
     def parse_body(self, request):
-        content_type = self.get_content_type(request)
+        # We use mimetype here since we don't need the other
+        # information provided by content_type
+        content_type = request.mimetype
         if content_type == 'application/graphql':
             return {'query': request.data.decode()}
 
@@ -197,19 +205,31 @@ class GraphQLView(View):
 
         return {}
 
-    def execute(self, *args, **kwargs):
-        return execute(self.schema, *args, **kwargs)
+    def execute(self, schema, *args, **kwargs):
+        root_value = self.get_root_value(request)
+        context_value = self.get_context(request)
+        middleware = self.get_middleware(request)
+        executor = self.get_executor(request)
 
-    def execute_graphql_request(self, data, query, variables, operation_name, show_graphiql=False):
+        return execute(
+            schema,
+            *args,
+            root_value=root_value,
+            context_value=context_value,
+            middleware=middleware,
+            executor=executor,
+            **kwargs
+        )
+
+    @staticmethod
+    def execute_graphql_request(schema, execute, data, query, variables, operation_name, only_allow_query=False):
         if not query:
-            if show_graphiql:
-                return None
             raise HttpError(400, 'Must provide query string.')
 
         try:
             source = Source(query, name='GraphQL request')
             ast = parse(source)
-            validation_errors = validate(self.schema, ast)
+            validation_errors = validate(schema, ast)
             if validation_errors:
                 return ExecutionResult(
                     errors=validation_errors,
@@ -218,11 +238,9 @@ class GraphQLView(View):
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
-        if request.method.lower() == 'get':
+        if only_allow_query:
             operation_ast = get_operation_ast(ast, operation_name)
             if operation_ast and operation_ast.operation != 'query':
-                if show_graphiql:
-                    return None
                 raise HttpError(
                     405,
                     'Can only perform a {} operation from a POST request.'.format(operation_ast.operation),
@@ -232,25 +250,32 @@ class GraphQLView(View):
                 )
 
         try:
-            return self.execute(
+            return execute(
+                schema,
                 ast,
-                root_value=self.get_root_value(request),
-                variable_values=variables or {},
                 operation_name=operation_name,
-                context_value=self.get_context(request),
-                middleware=self.get_middleware(request),
-                executor=self.get_executor(request)
+                variable_values=variables,
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
-    @classmethod
-    def can_display_graphiql(cls, data):
-        raw = 'raw' in request.args or 'raw' in data
-        return not raw and cls.request_wants_html(request)
+    @staticmethod
+    def json_encode(data, pretty=False):
+        if not pretty:
+            return json.dumps(data, separators=(',', ':'))
+
+        return json.dumps(
+            data,
+            indent=2,
+            separators=(',', ': ')
+        )
 
     @classmethod
-    def request_wants_html(cls, request):
+    def can_display_graphiql(cls, data):
+        return 'raw' not in data and cls.request_wants_html()
+
+    @classmethod
+    def request_wants_html(cls):
         best = request.accept_mimetypes \
             .best_match(['application/json', 'text/html'])
         return best == 'text/html' and \
@@ -258,7 +283,7 @@ class GraphQLView(View):
             request.accept_mimetypes['application/json']
 
     @staticmethod
-    def get_graphql_params(request, data):
+    def get_graphql_params(data):
         query = data.get('query')
         variables = data.get('variables')
         id = data.get('id')
@@ -279,9 +304,3 @@ class GraphQLView(View):
             return format_graphql_error(error)
 
         return {'message': six.text_type(error)}
-
-    @staticmethod
-    def get_content_type(request):
-        # We use mimetype here since we don't need the other
-        # information provided by content_type
-        return request.mimetype
