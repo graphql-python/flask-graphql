@@ -73,14 +73,21 @@ class GraphQLView(View):
                 raise HttpError(MethodNotAllowed(['GET', 'POST'], 'GraphQL only supports GET and POST requests.'))
 
             data = self.parse_body(request)
+
             show_graphiql = self.graphiql and self.can_display_graphiql(data)
 
-            if self.batch:
+            if isinstance(data, list):
+                if not self.batch or show_graphiql:
+                    raise HttpError(BadRequest('Batch requests are not allowed.'))
+
                 responses = [self.get_response(request, entry) for entry in data]
-                result = '[{}]'.format(','.join([response[0] for response in responses]))
-                status_code = max(responses, key=lambda response: response[1])[1]
+                response, status_codes = zip(*responses)
+                status_code = max(status_codes)
             else:
-                result, status_code = self.get_response(request, data, show_graphiql)
+                response, status_code = self.get_response(request, data, show_graphiql)
+
+            pretty = self.pretty or show_graphiql or request.args.get('pretty')
+            result = self.json_encode(response, pretty)
 
             if show_graphiql:
                 query, variables, operation_name, id = self.get_graphql_params(request, data)
@@ -99,7 +106,7 @@ class GraphQLView(View):
 
         except HttpError as e:
             return Response(
-                self.json_encode(request, {
+                self.json_encode({
                     'errors': [self.format_error(e)]
                 }),
                 status=e.response.code,
@@ -132,20 +139,15 @@ class GraphQLView(View):
                 response['data'] = execution_result.data
 
             if self.batch:
-                response = {
-                    'id': id,
-                    'payload': response,
-                    'status': status_code,
-                }
+                response['id'] = id
 
-            result = self.json_encode(request, response, show_graphiql)
         else:
-            result = None
+            response = None
 
-        return result, status_code
+        return response, status_code
 
-    def json_encode(self, request, d, show_graphiql=False):
-        pretty = self.pretty or show_graphiql or request.args.get('pretty')
+    @staticmethod
+    def json_encode(d, pretty=False):
         if not pretty:
             return json.dumps(d, separators=(',', ':'))
 
@@ -160,12 +162,7 @@ class GraphQLView(View):
 
         elif content_type == 'application/json':
             try:
-                request_json = json.loads(request.data.decode('utf8'))
-                if self.batch:
-                    assert isinstance(request_json, list)
-                else:
-                    assert isinstance(request_json, dict)
-                return request_json
+                return json.loads(request.data.decode('utf8'))
             except:
                 raise HttpError(BadRequest('POST body sent invalid JSON.'))
 
