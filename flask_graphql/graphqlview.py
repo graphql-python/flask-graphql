@@ -81,18 +81,20 @@ class GraphQLView(View):
                 )
 
             data = self.parse_body(request)
-
-            show_graphiql = self.graphiql and self.can_display_graphiql(data)
-
             is_batch = isinstance(data, list)
-            if is_batch:
-                if not self.batch or show_graphiql:
-                    raise HttpError(
-                        400,
-                        'Batch requests are not allowed.'
-                    )
-            else:
+
+            show_graphiql = not is_batch and self.graphiql and self.can_display_graphiql(data)
+
+            if not is_batch:
+                # print data
+                data = dict(data, **request.args.to_dict())
                 data = [data]
+            elif not self.batch:
+                raise HttpError(
+                    400,
+                    'Batch requests are not allowed.'
+                )
+
             responses = [self.get_response(request, entry, show_graphiql) for entry in data]
             response, status_codes = zip(*responses)
             status_code = max(status_codes)
@@ -185,10 +187,10 @@ class GraphQLView(View):
                 )
 
         elif content_type == 'application/x-www-form-urlencoded':
-            return request.form
+            return request.form.to_dict()
 
         elif content_type == 'multipart/form-data':
-            return request.form
+            return request.form.to_dict()
 
         return {}
 
@@ -254,8 +256,8 @@ class GraphQLView(View):
 
     @staticmethod
     def get_graphql_params(request, data):
-        query = request.args.get('query') or data.get('query')
-        variables = request.args.get('variables') or data.get('variables')
+        query = data.get('query')
+        variables = data.get('variables')
         id = data.get('id')
 
         if variables and isinstance(variables, six.text_type):
@@ -264,7 +266,7 @@ class GraphQLView(View):
             except:
                 raise HttpError(400, 'Variables are invalid JSON.')
 
-        operation_name = request.args.get('operationName') or data.get('operationName')
+        operation_name = data.get('operationName')
 
         return query, variables, operation_name, id
 
