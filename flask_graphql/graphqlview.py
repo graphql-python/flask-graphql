@@ -164,12 +164,15 @@ class GraphQLView(View):
         return response, status_code
 
     @staticmethod
-    def json_encode(d, pretty=False):
+    def json_encode(data, pretty=False):
         if not pretty:
-            return json.dumps(d, separators=(',', ':'))
+            return json.dumps(data, separators=(',', ':'))
 
-        return json.dumps(d, sort_keys=True,
-                          indent=2, separators=(',', ': '))
+        return json.dumps(
+            data,
+            indent=2,
+            separators=(',', ': ')
+        )
 
     # noinspection PyBroadException
     def parse_body(self, request):
