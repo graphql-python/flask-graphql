@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from flask import Flask
-from flask_graphql import GraphQLView
+
 from .schema import Schema
+from flask_graphql import GraphQLView
 
 
 def create_app(path='/graphql', **kwargs):

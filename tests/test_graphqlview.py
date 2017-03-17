@@ -1,5 +1,7 @@
-import pytest
+# -*- coding: utf-8 -*-
 import json
+
+import pytest
 
 try:
     from StringIO import StringIO
@@ -18,6 +20,7 @@ from flask import url_for
 @pytest.fixture
 def app():
     return create_app()
+
 
 def url_string(**url_params):
     string = url_for('graphql')
@@ -41,19 +44,19 @@ def test_allows_get_with_query_param(client):
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello World"}
+        'data': {'test': 'Hello World'}
     }
 
 
 def test_allows_get_with_variable_values(client):
     response = client.get(url_string(
         query='query helloWho($who: String){ test(who: $who) }',
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ))
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
@@ -163,7 +166,7 @@ def test_allows_mutation_to_exist_within_a_get(client):
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello World"}
+        'data': {'test': 'Hello World'}
     }
 
 
@@ -172,12 +175,16 @@ def test_allows_post_with_json_encoding(client):
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello World"}
+        'data': {'test': 'Hello World'}
     }
 
 
 def test_allows_sending_a_mutation_via_post(client):
-    response = client.post(url_string(), data=j(query='mutation TestMutation { writeTest { test } }'), content_type='application/json')
+    response = client.post(
+        url_string(),
+        data=j(query='mutation TestMutation { writeTest { test } }'),
+        content_type='application/json'
+    )
 
     assert response.status_code == 200
     assert response_json(response) == {
@@ -186,79 +193,83 @@ def test_allows_sending_a_mutation_via_post(client):
 
 
 def test_allows_post_with_url_encoding(client):
-    response = client.post(url_string(), data=urlencode(dict(query='{test}')), content_type='application/x-www-form-urlencoded')
+    response = client.post(
+        url_string(),
+        data=urlencode(dict(query='{test}')),
+        content_type='application/x-www-form-urlencoded'
+    )
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello World"}
+        'data': {'test': 'Hello World'}
     }
 
 
 def test_supports_post_json_query_with_string_variables(client):
     response = client.post(url_string(), data=j(
         query='query helloWho($who: String){ test(who: $who) }',
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ), content_type='application/json')
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
 def test_supports_post_json_query_with_json_variables(client):
     response = client.post(url_string(), data=j(
         query='query helloWho($who: String){ test(who: $who) }',
-        variables={'who': "Dolly"}
+        variables={'who': 'Dolly'}
     ), content_type='application/json')
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
 def test_supports_post_url_encoded_query_with_string_variables(client):
     response = client.post(url_string(), data=urlencode(dict(
         query='query helloWho($who: String){ test(who: $who) }',
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     )), content_type='application/x-www-form-urlencoded')
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
 def test_supports_post_json_quey_with_get_variable_values(client):
     response = client.post(url_string(
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ), data=j(
         query='query helloWho($who: String){ test(who: $who) }',
     ), content_type='application/json')
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
 def test_post_url_encoded_query_with_get_variable_values(client):
     response = client.post(url_string(
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ), data=urlencode(dict(
         query='query helloWho($who: String){ test(who: $who) }',
     )), content_type='application/x-www-form-urlencoded')
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
 def test_supports_post_raw_text_query_with_get_variable_values(client):
     response = client.post(url_string(
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ),
         data='query helloWho($who: String){ test(who: $who) }',
         content_type='application/graphql'
@@ -266,7 +277,7 @@ def test_supports_post_raw_text_query_with_get_variable_values(client):
 
     assert response.status_code == 200
     assert response_json(response) == {
-        'data': {'test': "Hello Dolly"}
+        'data': {'test': 'Hello Dolly'}
     }
 
 
@@ -396,7 +407,7 @@ def test_handles_incomplete_json_bodies(client):
 
 def test_handles_plain_post_text(client):
     response = client.post(url_string(
-        variables=json.dumps({'who': "Dolly"})
+        variables=json.dumps({'who': 'Dolly'})
     ),
         data='query helloWho($who: String){ test(who: $who) }',
         content_type='text/plain'
@@ -438,10 +449,9 @@ def test_passes_request_into_request_context(client):
     }
 
 
-@pytest.mark.parametrize('app', [create_app(context="CUSTOM CONTEXT")])
+@pytest.mark.parametrize('app', [create_app(context='CUSTOM CONTEXT')])
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query='{context}'))
-
 
     assert response.status_code == 200
     assert response_json(response) == {
@@ -455,7 +465,7 @@ def test_post_multipart_data(client):
     query = 'mutation TestMutation { writeTest { test } }'
     response = client.post(
         url_string(),
-        data= {
+        data={
             'query': query,
             'file': (StringIO(), 'text1.txt'),
         },
@@ -477,7 +487,7 @@ def test_batch_allows_post_with_json_encoding(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': { 'data': {'test': "Hello World"} },
+        'payload': {'data': {'test': 'Hello World'}},
         'status': 200,
     }]
 
@@ -489,7 +499,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         data=jl(
             id=1,
             query='query helloWho($who: String){ test(who: $who) }',
-            variables={'who': "Dolly"}
+            variables={'who': 'Dolly'}
         ),
         content_type='application/json'
     )
@@ -497,11 +507,11 @@ def test_batch_supports_post_json_query_with_json_variables(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': { 'data': {'test': "Hello Dolly"} },
+        'payload': {'data': {'test': 'Hello Dolly'}},
         'status': 200,
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(

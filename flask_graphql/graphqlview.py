@@ -1,16 +1,21 @@
+# -*- coding: utf-8 -*-
 import json
 
 import six
-from flask import Response, request
+from flask import request
+from flask import Response
 from flask.views import View
-from werkzeug.exceptions import BadRequest, MethodNotAllowed
-
-from graphql import Source, execute, parse, validate
+from graphql import execute
+from graphql import parse
+from graphql import Source
+from graphql import validate
 from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.utils.get_operation_ast import get_operation_ast
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import MethodNotAllowed
 
 from .render_graphiql import render_graphiql
 

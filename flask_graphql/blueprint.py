@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import warnings
 
 from flask import Blueprint
