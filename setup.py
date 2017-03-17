@@ -1,4 +1,6 @@
-from setuptools import setup, find_packages
+# -*- coding: utf-8 -*-
+from setuptools import find_packages
+from setuptools import setup
 
 required_packages = ['graphql-core>=1.0', 'flask>=0.7.0']
 

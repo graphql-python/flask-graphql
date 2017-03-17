@@ -1,10 +1,14 @@
-from graphql.type.definition import GraphQLArgument, GraphQLField, GraphQLNonNull, GraphQLObjectType
+# -*- coding: utf-8 -*-
+from graphql.type.definition import GraphQLArgument
+from graphql.type.definition import GraphQLField
+from graphql.type.definition import GraphQLNonNull
+from graphql.type.definition import GraphQLObjectType
 from graphql.type.scalars import GraphQLString
 from graphql.type.schema import GraphQLSchema
 
 
 def resolve_raises(*_):
-    raise Exception("Throws!")
+    raise Exception('Throws!')
 
 
 QueryRootType = GraphQLObjectType(
