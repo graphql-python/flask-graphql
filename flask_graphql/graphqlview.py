@@ -4,7 +4,6 @@ from promise import Promise
 import six
 from flask import Response, request
 from flask.views import View
-from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from graphql import Source, execute, parse, validate
 from graphql.error import format_error as format_graphql_error
@@ -16,13 +15,13 @@ from graphql.utils.get_operation_ast import get_operation_ast
 from .render_graphiql import render_graphiql
 
 
-class HttpError(Exception):
+class HttpQueryError(Exception):
     def __init__(self, status_code, message=None, is_graphql_error=False, headers=None):
         self.status_code = status_code
         self.message = message
         self.is_graphql_error = is_graphql_error
         self.headers = headers
-        super(HttpError, self).__init__(message)
+        super(HttpQueryError, self).__init__(message)
 
 
 class GraphQLView(View):
@@ -70,10 +69,11 @@ class GraphQLView(View):
         )
 
     def dispatch_request(self):
+        
         try:
             request_method = request.method.lower()
             if request_method not in ('get', 'post'):
-                raise HttpError(
+                raise HttpQueryError(
                     405,
                     'GraphQL only supports GET and POST requests.',
                     headers={
@@ -91,7 +91,7 @@ class GraphQLView(View):
                 data = dict(data, **request.args.to_dict())
                 data = [data]
             elif not self.batch:
-                raise HttpError(
+                raise HttpQueryError(
                     400,
                     'Batch requests are not allowed.'
                 )
@@ -129,7 +129,7 @@ class GraphQLView(View):
                 content_type='application/json'
             )
 
-        except HttpError as e:
+        except HttpQueryError as e:
             return Response(
                 self.json_encode({
                     'errors': [self.format_error(e)]
@@ -151,7 +151,7 @@ class GraphQLView(View):
                 operation_name,
                 only_allow_query,
             )
-        except HttpError:
+        except HttpQueryError:
             if show_graphiql:
                 execution_result = None
             else:
@@ -193,7 +193,7 @@ class GraphQLView(View):
             try:
                 return json.loads(request.data.decode('utf8'))
             except:
-                raise HttpError(
+                raise HttpQueryError(
                     400,
                     'POST body sent invalid JSON.'
                 )
@@ -225,7 +225,7 @@ class GraphQLView(View):
     @staticmethod
     def execute_graphql_request(schema, execute, data, query, variables, operation_name, only_allow_query=False):
         if not query:
-            raise HttpError(400, 'Must provide query string.')
+            raise HttpQueryError(400, 'Must provide query string.')
 
         try:
             source = Source(query, name='GraphQL request')
@@ -242,7 +242,7 @@ class GraphQLView(View):
         if only_allow_query:
             operation_ast = get_operation_ast(ast, operation_name)
             if operation_ast and operation_ast.operation != 'query':
-                raise HttpError(
+                raise HttpQueryError(
                     405,
                     'Can only perform a {} operation from a POST request.'.format(operation_ast.operation),
                     headers={
@@ -294,7 +294,7 @@ class GraphQLView(View):
             try:
                 variables = json.loads(variables)
             except:
-                raise HttpError(400, 'Variables are invalid JSON.')
+                raise HttpQueryError(400, 'Variables are invalid JSON.')
 
         operation_name = data.get('operationName')
 
