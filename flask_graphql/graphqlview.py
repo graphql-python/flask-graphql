@@ -84,7 +84,7 @@ class GraphQLView(View):
             data = self.parse_body(request)
             is_batch = isinstance(data, list)
 
-            show_graphiql = not is_batch and self.graphiql and self.can_display_graphiql(data)
+            show_graphiql = not is_batch and self.should_display_graphiql(data)
 
             if not is_batch:
                 assert isinstance(data, dict), "GraphQL params should be a dict. Received {}.".format(data)
@@ -271,12 +271,13 @@ class GraphQLView(View):
             separators=(',', ': ')
         )
 
-    @classmethod
-    def can_display_graphiql(cls, data):
-        return 'raw' not in data and cls.request_wants_html()
+    def should_display_graphiql(self, data):
+        if not self.graphiql or 'raw' in data:
+            return False
 
-    @classmethod
-    def request_wants_html(cls):
+        return self.request_wants_html()
+
+    def request_wants_html(self):
         best = request.accept_mimetypes \
             .best_match(['application/json', 'text/html'])
         return best == 'text/html' and \
