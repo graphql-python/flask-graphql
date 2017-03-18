@@ -87,7 +87,7 @@ class GraphQLView(View):
             show_graphiql = not is_batch and self.graphiql and self.can_display_graphiql(data)
 
             if not is_batch:
-                # print data
+                assert isinstance(data, dict), "GraphQL params should be a dict. Received {}.".format(data)
                 data = dict(data, **request.args.to_dict())
                 data = [data]
             elif not self.batch:
@@ -156,15 +156,16 @@ class GraphQLView(View):
                 execution_result = None
             else:
                 raise
-        return self.format_execution_result(execution_result, id)
+        return self.format_execution_result(execution_result, id, self.format_error)
 
-    def format_execution_result(self, execution_result, id):
+    @staticmethod
+    def format_execution_result(execution_result, id, format_error):
         status_code = 200
         if execution_result:
             response = {}
 
             if execution_result.errors:
-                response['errors'] = [self.format_error(e) for e in execution_result.errors]
+                response['errors'] = [format_error(e) for e in execution_result.errors]
 
             if execution_result.invalid:
                 status_code = 400
@@ -172,7 +173,7 @@ class GraphQLView(View):
                 status_code = 200
                 response['data'] = execution_result.data
 
-            if self.batch:
+            if id:
                 response['id'] = id
 
         else:
