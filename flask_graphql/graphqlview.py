@@ -101,7 +101,7 @@ class GraphQLView(View):
             elif not self.batch:
                 raise HttpQueryError(
                     400,
-                    'Batch requests are not allowed.'
+                    'Batch GraphQL requests are not enabled.'
                 )
 
 

@@ -381,7 +381,7 @@ def test_handles_batch_correctly_if_is_disabled(client):
 
     assert response.status_code == 400
     assert response_json(response) == {
-        'errors': [{'message': 'Batch requests are not allowed.'}]
+        'errors': [{'message': 'Batch GraphQL requests are not enabled.'}]
     }
 
 
