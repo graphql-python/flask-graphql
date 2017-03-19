@@ -107,7 +107,7 @@ class GraphQLView(View):
 
             responses = [self.get_response(
                 self.schema,
-                entry,
+                self.get_graphql_params(entry),
                 catch,
                 only_allow_query,
                 root_value=self.get_root_value(request),
@@ -147,12 +147,10 @@ class GraphQLView(View):
                 content_type='application/json'
             )
 
-    def get_response(self, schema, data, catch=None, only_allow_query=False, **kwargs):
-        params = self.get_graphql_params(data)
+    def get_response(self, schema, params, catch=None, only_allow_query=False, **kwargs):
         try:
             execution_result = self.execute_graphql_request(
                 schema,
-                data,
                 params,
                 only_allow_query,
                 **kwargs
@@ -216,7 +214,7 @@ class GraphQLView(View):
         return {}
 
     @staticmethod
-    def execute_graphql_request(schema, data, params, only_allow_query=False, **kwargs):
+    def execute_graphql_request(schema, params, only_allow_query=False, **kwargs):
         if not params.query:
             raise HttpQueryError(400, 'Must provide query string.')
 
