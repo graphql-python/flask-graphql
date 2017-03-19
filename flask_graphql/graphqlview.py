@@ -95,7 +95,11 @@ class GraphQLView(View):
             only_allow_query = request_method == 'get'
 
             if not is_batch:
-                assert isinstance(data, dict), "GraphQL params should be a dict. Received {}.".format(data)
+                if not isinstance(data, dict):
+                    raise HttpQueryError(
+                        400,
+                        'GraphQL params should be a dict. Received {}.'.format(data)
+                    )
                 data = dict(data, **request.args.to_dict())
                 data = [data]
             elif not self.batch:
