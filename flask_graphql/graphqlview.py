@@ -17,6 +17,8 @@ from .render_graphiql import render_graphiql
 
 
 GraphQLParams = namedtuple('GraphQLParams', 'query,variables,operation_name,id')
+GraphQLResponse = namedtuple('GraphQLResponse', 'result,params,status_code')
+
 
 class HttpQueryError(Exception):
     def __init__(self, status_code, message=None, is_graphql_error=False, headers=None):
@@ -85,7 +87,7 @@ class GraphQLView(View):
                     }
                 )
 
-            data = self.parse_body(request)
+            data = self.parse_body()
             is_batch = isinstance(data, list)
 
             show_graphiql = not is_batch and self.should_display_graphiql(data)
@@ -110,7 +112,7 @@ class GraphQLView(View):
                 only_allow_query,
             ) for entry in data]
 
-            response, status_codes = zip(*responses)
+            response, params, status_codes = zip(*responses)
             status_code = max(status_codes)
 
             if not is_batch:
@@ -120,9 +122,8 @@ class GraphQLView(View):
             result = self.json_encode(response, pretty)
 
             if show_graphiql:
-                params = self.get_graphql_params(data[0])
                 return self.render_graphiql(
-                    params=params,
+                    params=params[0],
                     result=result
                 )
 
@@ -154,7 +155,13 @@ class GraphQLView(View):
             )
         except catch:
             execution_result = None
-        return self.format_execution_result(execution_result, params.id, self.format_error)
+        
+        response, status_code = self.format_execution_result(execution_result, params.id, self.format_error)
+        return GraphQLResponse(
+            response,
+            params,
+            status_code
+        )
 
     @staticmethod
     def format_execution_result(execution_result, id, format_error):
@@ -180,7 +187,7 @@ class GraphQLView(View):
         return response, status_code
 
     # noinspection PyBroadException
-    def parse_body(self, request):
+    def parse_body(self):
         # We use mimetype here since we don't need the other
         # information provided by content_type
         content_type = request.mimetype
