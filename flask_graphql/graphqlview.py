@@ -92,6 +92,7 @@ class GraphQLView(View):
 
             show_graphiql = not is_batch and self.should_display_graphiql(data)
             catch = HttpQueryError if show_graphiql else None
+            only_allow_query = request_method == 'get'
 
             if not is_batch:
                 assert isinstance(data, dict), "GraphQL params should be a dict. Received {}.".format(data)
@@ -103,13 +104,16 @@ class GraphQLView(View):
                     'Batch requests are not allowed.'
                 )
 
-            only_allow_query = request_method == 'get'
 
             responses = [self.get_response(
-                self.execute,
+                self.schema,
                 entry,
                 catch,
                 only_allow_query,
+                root_value=self.get_root_value(request),
+                context_value=self.get_context(request),
+                middleware=self.get_middleware(request),
+                executor=self.get_executor(request),
             ) for entry in data]
 
             response, params, status_codes = zip(*responses)
@@ -143,15 +147,15 @@ class GraphQLView(View):
                 content_type='application/json'
             )
 
-    def get_response(self, execute, data, catch=None, only_allow_query=False):
+    def get_response(self, schema, data, catch=None, only_allow_query=False, **kwargs):
         params = self.get_graphql_params(data)
         try:
             execution_result = self.execute_graphql_request(
-                self.schema,
-                execute,
+                schema,
                 data,
                 params,
                 only_allow_query,
+                **kwargs
             )
         except catch:
             execution_result = None
@@ -211,24 +215,8 @@ class GraphQLView(View):
 
         return {}
 
-    def execute(self, schema, *args, **kwargs):
-        root_value = self.get_root_value(request)
-        context_value = self.get_context(request)
-        middleware = self.get_middleware(request)
-        executor = self.get_executor(request)
-
-        return execute(
-            schema,
-            *args,
-            root_value=root_value,
-            context_value=context_value,
-            middleware=middleware,
-            executor=executor,
-            **kwargs
-        )
-
     @staticmethod
-    def execute_graphql_request(schema, execute, data, params, only_allow_query=False):
+    def execute_graphql_request(schema, data, params, only_allow_query=False, **kwargs):
         if not params.query:
             raise HttpQueryError(400, 'Must provide query string.')
 
@@ -261,6 +249,7 @@ class GraphQLView(View):
                 ast,
                 operation_name=params.operation_name,
                 variable_values=params.variables,
+                **kwargs
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
