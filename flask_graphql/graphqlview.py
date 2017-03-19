@@ -17,7 +17,7 @@ from .render_graphiql import render_graphiql
 
 
 GraphQLParams = namedtuple('GraphQLParams', 'query,variables,operation_name,id')
-GraphQLResponse = namedtuple('GraphQLResponse', 'result,params,status_code')
+GraphQLResponse = namedtuple('GraphQLResponse', 'result,status_code')
 
 
 class HttpQueryError(Exception):
@@ -51,19 +51,23 @@ class GraphQLView(View):
 
         assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
 
+    # Flask
     # noinspection PyUnusedLocal
-    def get_root_value(self, request):
+    def get_root_value(self):
         return self.root_value
 
-    def get_context(self, request):
+    # Flask
+    def get_context(self):
         if self.context is not None:
             return self.context
         return request
 
-    def get_middleware(self, request):
+    # Flask
+    def get_middleware(self):
         return self.middleware
 
-    def get_executor(self, request):
+    # Flask
+    def get_executor(self):
         return self.executor
 
     def render_graphiql(self, params, result):
@@ -108,19 +112,20 @@ class GraphQLView(View):
                     'Batch GraphQL requests are not enabled.'
                 )
 
+            all_params = [self.get_graphql_params(entry) for entry in data]
 
             responses = [self.get_response(
                 self.schema,
-                self.get_graphql_params(entry),
+                params,
                 catch,
                 only_allow_query,
-                root_value=self.get_root_value(request),
-                context_value=self.get_context(request),
-                middleware=self.get_middleware(request),
-                executor=self.get_executor(request),
-            ) for entry in data]
+                root_value=self.get_root_value(),
+                context_value=self.get_context(),
+                middleware=self.get_middleware(),
+                executor=self.get_executor(),
+            ) for params in all_params]
 
-            response, params, status_codes = zip(*responses)
+            response, status_codes = zip(*responses)
             status_code = max(status_codes)
 
             if not is_batch:
@@ -131,7 +136,7 @@ class GraphQLView(View):
 
             if show_graphiql:
                 return self.render_graphiql(
-                    params=params[0],
+                    params=all_params[0],
                     result=result
                 )
 
@@ -160,14 +165,9 @@ class GraphQLView(View):
                 **kwargs
             )
         except catch:
-            execution_result = None
+            return GraphQLResponse(None, 400)
         
-        response, status_code = self.format_execution_result(execution_result, params.id, self.format_error)
-        return GraphQLResponse(
-            response,
-            params,
-            status_code
-        )
+        return self.format_execution_result(execution_result, params.id, self.format_error)
 
     @staticmethod
     def format_execution_result(execution_result, id, format_error):
@@ -190,8 +190,9 @@ class GraphQLView(View):
         else:
             response = None
 
-        return response, status_code
+        return GraphQLResponse(response, status_code)
 
+    # Flask
     # noinspection PyBroadException
     def parse_body(self):
         # We use mimetype here since we don't need the other
@@ -267,12 +268,14 @@ class GraphQLView(View):
             separators=(',', ': ')
         )
 
+    # Flask
     def should_display_graphiql(self, data):
         if not self.graphiql or 'raw' in data:
             return False
 
         return self.request_wants_html()
 
+    # Flask
     def request_wants_html(self):
         best = request.accept_mimetypes \
             .best_match(['application/json', 'text/html'])
