@@ -89,6 +89,7 @@ class GraphQLView(View):
             is_batch = isinstance(data, list)
 
             show_graphiql = not is_batch and self.should_display_graphiql(data)
+            catch = HttpQueryError if show_graphiql else None
 
             if not is_batch:
                 assert isinstance(data, dict), "GraphQL params should be a dict. Received {}.".format(data)
@@ -105,7 +106,7 @@ class GraphQLView(View):
             responses = [self.get_response(
                 self.execute,
                 entry,
-                show_graphiql,
+                catch,
                 only_allow_query,
             ) for entry in data]
 
@@ -141,7 +142,7 @@ class GraphQLView(View):
                 content_type='application/json'
             )
 
-    def get_response(self, execute, data, show_graphiql=False, only_allow_query=False):
+    def get_response(self, execute, data, catch=None, only_allow_query=False):
         params = self.get_graphql_params(data)
         try:
             execution_result = self.execute_graphql_request(
@@ -151,11 +152,8 @@ class GraphQLView(View):
                 params,
                 only_allow_query,
             )
-        except HttpQueryError:
-            if show_graphiql:
-                execution_result = None
-            else:
-                raise
+        except catch:
+            execution_result = None
         return self.format_execution_result(execution_result, params.id, self.format_error)
 
     @staticmethod
