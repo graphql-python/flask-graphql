@@ -1,5 +1,6 @@
 import json
 from promise import Promise
+from collections import namedtuple
 
 import six
 from flask import Response, request
@@ -14,6 +15,8 @@ from graphql.utils.get_operation_ast import get_operation_ast
 
 from .render_graphiql import render_graphiql
 
+
+GraphQLParams = namedtuple('GraphQLParams', 'query,variables,operation_name,id')
 
 class HttpQueryError(Exception):
     def __init__(self, status_code, message=None, is_graphql_error=False, headers=None):
@@ -61,11 +64,12 @@ class GraphQLView(View):
     def get_executor(self, request):
         return self.executor
 
-    def render_graphiql(self, **kwargs):
+    def render_graphiql(self, params, result):
         return render_graphiql(
+            params=params,
+            result=result,
             graphiql_version=self.graphiql_version,
             graphiql_template=self.graphiql_template,
-            **kwargs
         )
 
     def dispatch_request(self):
@@ -115,11 +119,9 @@ class GraphQLView(View):
             result = self.json_encode(response, pretty)
 
             if show_graphiql:
-                query, variables, operation_name, id = self.get_graphql_params(data[0])
+                params = self.get_graphql_params(data[0])
                 return self.render_graphiql(
-                    query=query,
-                    variables=variables,
-                    operation_name=operation_name,
+                    params=params,
                     result=result
                 )
 
@@ -140,15 +142,13 @@ class GraphQLView(View):
             )
 
     def get_response(self, execute, data, show_graphiql=False, only_allow_query=False):
-        query, variables, operation_name, id = self.get_graphql_params(data)
+        params = self.get_graphql_params(data)
         try:
             execution_result = self.execute_graphql_request(
                 self.schema,
                 execute,
                 data,
-                query,
-                variables,
-                operation_name,
+                params,
                 only_allow_query,
             )
         except HttpQueryError:
@@ -156,7 +156,7 @@ class GraphQLView(View):
                 execution_result = None
             else:
                 raise
-        return self.format_execution_result(execution_result, id, self.format_error)
+        return self.format_execution_result(execution_result, params.id, self.format_error)
 
     @staticmethod
     def format_execution_result(execution_result, id, format_error):
@@ -223,12 +223,12 @@ class GraphQLView(View):
         )
 
     @staticmethod
-    def execute_graphql_request(schema, execute, data, query, variables, operation_name, only_allow_query=False):
-        if not query:
+    def execute_graphql_request(schema, execute, data, params, only_allow_query=False):
+        if not params.query:
             raise HttpQueryError(400, 'Must provide query string.')
 
         try:
-            source = Source(query, name='GraphQL request')
+            source = Source(params.query, name='GraphQL request')
             ast = parse(source)
             validation_errors = validate(schema, ast)
             if validation_errors:
@@ -240,7 +240,7 @@ class GraphQLView(View):
             return ExecutionResult(errors=[e], invalid=True)
 
         if only_allow_query:
-            operation_ast = get_operation_ast(ast, operation_name)
+            operation_ast = get_operation_ast(ast, params.operation_name)
             if operation_ast and operation_ast.operation != 'query':
                 raise HttpQueryError(
                     405,
@@ -254,8 +254,8 @@ class GraphQLView(View):
             return execute(
                 schema,
                 ast,
-                operation_name=operation_name,
-                variable_values=variables,
+                operation_name=params.operation_name,
+                variable_values=params.variables,
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
@@ -285,20 +285,22 @@ class GraphQLView(View):
             request.accept_mimetypes['application/json']
 
     @staticmethod
-    def get_graphql_params(data):
-        query = data.get('query')
-        variables = data.get('variables')
-        id = data.get('id')
-
+    def get_variables(variables):
         if variables and isinstance(variables, six.text_type):
             try:
-                variables = json.loads(variables)
+                return json.loads(variables)
             except:
                 raise HttpQueryError(400, 'Variables are invalid JSON.')
+        return variables
 
+    @classmethod
+    def get_graphql_params(cls, data):
+        query = data.get('query')
+        variables = cls.get_variables(data.get('variables'))
+        id = data.get('id')
         operation_name = data.get('operationName')
 
-        return query, variables, operation_name, id
+        return GraphQLParams(query, variables, operation_name, id)
 
     @staticmethod
     def format_error(error):
