@@ -1,6 +1,5 @@
 from flask import render_template_string
 
-
 GRAPHIQL_VERSION = '0.7.1'
 
 TEMPLATE = '''<!--

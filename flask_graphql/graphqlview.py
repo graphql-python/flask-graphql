@@ -1,11 +1,12 @@
-import json
 from functools import partial
 
 from flask import Response, request
 from flask.views import View
 
 from graphql.type.schema import GraphQLSchema
-from graphql_server import run_http_query, HttpQueryError, default_format_error, load_json_body, encode_execution_results, json_encode
+from graphql_server import (HttpQueryError, default_format_error,
+                            encode_execution_results, json_encode,
+                            load_json_body, run_http_query)
 
 from .render_graphiql import render_graphiql
 
@@ -123,8 +124,7 @@ class GraphQLView(View):
         elif content_type == 'application/json':
             return load_json_body(request.data.decode('utf8'))
 
-        elif content_type == 'application/x-www-form-urlencoded' \
-          or content_type == 'multipart/form-data':
+        elif content_type in ('application/x-www-form-urlencoded', 'multipart/form-data'):
             return request.form
 
         return {}
