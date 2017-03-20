@@ -10,7 +10,6 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.utils.get_operation_ast import get_operation_ast
 
-
 from .error import HttpQueryError
 
 
@@ -29,57 +28,56 @@ def default_format_error(error):
     return {'message': six.text_type(error)}
 
 
-
 def run_http_query(schema, request_method, data, query_data=None, batch_enabled=False, catch=None, **execute_options):
-        if request_method not in ('get', 'post'):
-            raise HttpQueryError(
-                405,
-                'GraphQL only supports GET and POST requests.',
-                headers={
-                    'Allow': 'GET, POST'
-                }
-            )
+    if request_method not in ('get', 'post'):
+        raise HttpQueryError(
+            405,
+            'GraphQL only supports GET and POST requests.',
+            headers={
+                'Allow': 'GET, POST'
+            }
+        )
 
-        is_batch = isinstance(data, list)
+    is_batch = isinstance(data, list)
 
-        is_get_request = request_method == 'get'
-        allow_only_query = is_get_request
+    is_get_request = request_method == 'get'
+    allow_only_query = is_get_request
 
-        if not is_batch:
-            if not isinstance(data, dict):
-                raise HttpQueryError(
-                    400,
-                    'GraphQL params should be a dict. Received {}.'.format(data)
-                )
-            data = [data]
-        elif not batch_enabled:
+    if not is_batch:
+        if not isinstance(data, dict):
             raise HttpQueryError(
                 400,
-                'Batch GraphQL requests are not enabled.'
+                'GraphQL params should be a dict. Received {}.'.format(data)
             )
+        data = [data]
+    elif not batch_enabled:
+        raise HttpQueryError(
+            400,
+            'Batch GraphQL requests are not enabled.'
+        )
 
-        if not data:
-            raise HttpQueryError(
-                400,
-                'Received an empty list in the batch request.'
-            )
+    if not data:
+        raise HttpQueryError(
+            400,
+            'Received an empty list in the batch request.'
+        )
 
-        extra_data = {}
-        # If is a batch request, we don't consume the data from the query
-        if not is_batch:
-            extra_data = query_data or {}
+    extra_data = {}
+    # If is a batch request, we don't consume the data from the query
+    if not is_batch:
+        extra_data = query_data or {}
 
-        all_params = [get_graphql_params(entry, extra_data) for entry in data]
+    all_params = [get_graphql_params(entry, extra_data) for entry in data]
 
-        responses = [get_response(
-            schema,
-            params,
-            catch,
-            allow_only_query,
-            **execute_options
-        ) for params in all_params]
+    responses = [get_response(
+        schema,
+        params,
+        catch,
+        allow_only_query,
+        **execute_options
+    ) for params in all_params]
 
-        return responses, all_params
+    return responses, all_params
 
 
 def encode_execution_results(execution_results, format_error, is_batch, encode):
