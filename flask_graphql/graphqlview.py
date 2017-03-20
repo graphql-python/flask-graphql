@@ -59,8 +59,6 @@ class GraphQLView(View):
         try:
             request_method = request.method.lower()
             data = self.parse_body()
-            if isinstance(data, dict):
-                data = dict(data, **request.args.to_dict())
 
             show_graphiql = request_method == 'get' and self.should_display_graphiql()
             catch = HttpQueryError if show_graphiql else None
@@ -71,9 +69,9 @@ class GraphQLView(View):
                 self.schema,
                 request_method,
                 data,
+                query_data=request.args.to_dict(),
                 batch_enabled=self.batch,
                 catch=catch,
-
                 # Execute options
                 root_value=self.get_root_value(),
                 context_value=self.get_context(),
