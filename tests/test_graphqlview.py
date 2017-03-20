@@ -470,13 +470,16 @@ def test_post_multipart_data(client):
 def test_batch_allows_post_with_json_encoding(client):
     response = client.post(
         url_string(),
-        data=jl(id=1, query='{test}'),
+        data=jl(
+            # id=1,
+            query='{test}'
+        ),
         content_type='application/json'
     )
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
+        # 'id': 1,
         'data': {'test': "Hello World"}
     }]
 
@@ -486,7 +489,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
     response = client.post(
         url_string(),
         data=jl(
-            id=1,
+            # id=1,
             query='query helloWho($who: String){ test(who: $who) }',
             variables={'who': "Dolly"}
         ),
@@ -495,7 +498,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
+        # 'id': 1,
         'data': {'test': "Hello Dolly"}
     }]
  
@@ -505,7 +508,7 @@ def test_batch_allows_post_with_operation_name(client):
     response = client.post(
         url_string(),
         data=jl(
-            id=1,
+            # id=1,
             query='''
             query helloYou { test(who: "You"), ...shared }
             query helloWorld { test(who: "World"), ...shared }
@@ -521,7 +524,7 @@ def test_batch_allows_post_with_operation_name(client):
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
+        # 'id': 1,
         'data': {
             'test': 'Hello World',
             'shared': 'Hello Everyone'

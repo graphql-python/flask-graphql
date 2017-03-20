@@ -4,7 +4,7 @@ from flask import Response, request
 from flask.views import View
 
 from graphql.type.schema import GraphQLSchema
-from graphql_server import run_http_query, HttpQueryError, default_format_error, load_json_body
+from graphql_server import run_http_query, HttpQueryError, default_format_error, load_json_body, format_execution_result
 
 from .render_graphiql import render_graphiql
 
@@ -65,11 +65,11 @@ class GraphQLView(View):
 
             pretty = self.pretty or show_graphiql or request.args.get('pretty')
 
-            result, status_code, all_params = run_http_query(
+            execution_results, all_params = run_http_query(
                 self.schema,
                 request_method,
                 data,
-                query_data=request.args.to_dict(),
+                query_data=request.args,
                 batch_enabled=self.batch,
                 catch=catch,
                 # Execute options
@@ -78,6 +78,16 @@ class GraphQLView(View):
                 middleware=self.get_middleware(),
                 executor=self.get_executor(),
             )
+            responses = [
+                format_execution_result(execution_result, default_format_error)
+                for execution_result in execution_results
+            ]
+            result, status_codes = zip(*responses)
+            status_code = max(status_codes)
+
+            # If is not batch
+            if not isinstance(data, list):
+                result = result[0]
 
             result = self.json_encode(result, pretty)
 
@@ -110,14 +120,14 @@ class GraphQLView(View):
         # information provided by content_type
         content_type = request.mimetype
         if content_type == 'application/graphql':
-            return {'query': request.data.decode()}
+            return {'query': request.data.decode('utf8')}
 
         elif content_type == 'application/json':
             return load_json_body(request.data.decode('utf8'))
 
         elif content_type == 'application/x-www-form-urlencoded' \
           or content_type == 'multipart/form-data':
-            return request.form.to_dict()
+            return request.form
 
         return {}
 

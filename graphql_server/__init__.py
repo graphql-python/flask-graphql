@@ -30,7 +30,7 @@ def default_format_error(error):
 
 
 
-def run_http_query(schema, request_method, data, query_data=None, batch_enabled=False, format_error=None, catch=None, **execute_options):
+def run_http_query(schema, request_method, data, query_data=None, batch_enabled=False, catch=None, **execute_options):
         if request_method not in ('get', 'post'):
             raise HttpQueryError(
                 405,
@@ -71,24 +71,15 @@ def run_http_query(schema, request_method, data, query_data=None, batch_enabled=
 
         all_params = [get_graphql_params(entry, extra_data) for entry in data]
 
-        if format_error is None:
-            format_error = default_format_error
-
-        responses = [format_execution_result(get_response(
+        responses = [get_response(
             schema,
             params,
             catch,
             allow_only_query,
             **execute_options
-        ), params.id, format_error) for params in all_params]
+        ) for params in all_params]
 
-        response, status_codes = zip(*responses)
-        status_code = max(status_codes)
-
-        if not is_batch:
-            response = response[0]
-
-        return response, status_code, all_params
+        return responses, all_params
 
 
 def load_json_variables(variables):
@@ -129,7 +120,7 @@ def get_response(schema, params, catch=None, allow_only_query=False, **kwargs):
     return execution_result
 
 
-def format_execution_result(execution_result, id, format_error):
+def format_execution_result(execution_result, format_error):
     status_code = 200
 
     if isinstance(execution_result, Promise):
@@ -146,9 +137,6 @@ def format_execution_result(execution_result, id, format_error):
         else:
             status_code = 200
             response['data'] = execution_result.data
-
-        if id:
-            response['id'] = id
 
     else:
         response = None
