@@ -1,10 +1,11 @@
 import json
+from functools import partial
 
 from flask import Response, request
 from flask.views import View
 
 from graphql.type.schema import GraphQLSchema
-from graphql_server import run_http_query, HttpQueryError, default_format_error, load_json_body, format_execution_result
+from graphql_server import run_http_query, HttpQueryError, default_format_error, load_json_body, encode_execution_results, json_encode
 
 from .render_graphiql import render_graphiql
 
@@ -54,8 +55,10 @@ class GraphQLView(View):
             graphiql_template=self.graphiql_template,
         )
 
+    format_error = staticmethod(default_format_error)
+    encode = staticmethod(json_encode)
+
     def dispatch_request(self):
-        
         try:
             request_method = request.method.lower()
             data = self.parse_body()
@@ -72,24 +75,19 @@ class GraphQLView(View):
                 query_data=request.args,
                 batch_enabled=self.batch,
                 catch=catch,
+
                 # Execute options
                 root_value=self.get_root_value(),
                 context_value=self.get_context(),
                 middleware=self.get_middleware(),
                 executor=self.get_executor(),
             )
-            responses = [
-                format_execution_result(execution_result, default_format_error)
-                for execution_result in execution_results
-            ]
-            result, status_codes = zip(*responses)
-            status_code = max(status_codes)
-
-            # If is not batch
-            if not isinstance(data, list):
-                result = result[0]
-
-            result = self.json_encode(result, pretty)
+            result, status_code = encode_execution_results(
+                execution_results,
+                is_batch=isinstance(data, list),
+                format_error=self.format_error,
+                encode=partial(self.encode, pretty=pretty)
+            )
 
             if show_graphiql:
                 return self.render_graphiql(
@@ -105,8 +103,8 @@ class GraphQLView(View):
 
         except HttpQueryError as e:
             return Response(
-                self.json_encode({
-                    'errors': [default_format_error(e)]
+                self.encode({
+                    'errors': [self.format_error(e)]
                 }),
                 status=e.status_code,
                 headers=e.headers,
@@ -130,17 +128,6 @@ class GraphQLView(View):
             return request.form
 
         return {}
-
-    @staticmethod
-    def json_encode(data, pretty=False):
-        if not pretty:
-            return json.dumps(data, separators=(',', ':'))
-
-        return json.dumps(
-            data,
-            indent=2,
-            separators=(',', ': ')
-        )
 
     def should_display_graphiql(self):
         if not self.graphiql or 'raw' in request.args:

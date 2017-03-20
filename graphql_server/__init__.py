@@ -67,7 +67,7 @@ def run_http_query(schema, request_method, data, query_data=None, batch_enabled=
         extra_data = {}
         # If is a batch request, we don't consume the data from the query
         if not is_batch:
-            extra_data = query_data
+            extra_data = query_data or {}
 
         all_params = [get_graphql_params(entry, extra_data) for entry in data]
 
@@ -80,6 +80,31 @@ def run_http_query(schema, request_method, data, query_data=None, batch_enabled=
         ) for params in all_params]
 
         return responses, all_params
+
+
+def encode_execution_results(execution_results, format_error, is_batch, encode):
+    responses = [
+        format_execution_result(execution_result, format_error)
+        for execution_result in execution_results
+    ]
+    result, status_codes = zip(*responses)
+    status_code = max(status_codes)
+
+    if not is_batch:
+        result = result[0]
+
+    return encode(result), status_code
+
+
+def json_encode(data, pretty=False):
+    if not pretty:
+        return json.dumps(data, separators=(',', ':'))
+
+    return json.dumps(
+        data,
+        indent=2,
+        separators=(',', ': ')
+    )
 
 
 def load_json_variables(variables):
@@ -111,20 +136,13 @@ def get_response(schema, params, catch=None, allow_only_query=False, **kwargs):
             **kwargs
         )
     except catch:
-        execution_result = ExecutionResult(
-            data=None,
-            invalid=True,
-        )
-        # return GraphQLResponse(None, 400)
-    
+        return None
+
     return execution_result
 
 
 def format_execution_result(execution_result, format_error):
     status_code = 200
-
-    if isinstance(execution_result, Promise):
-        execution_result = execution_result.get()
 
     if execution_result:
         response = {}
