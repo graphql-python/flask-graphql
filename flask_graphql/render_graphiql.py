@@ -1,6 +1,5 @@
 from flask import render_template_string
 
-
 GRAPHIQL_VERSION = '0.7.1'
 
 TEMPLATE = '''<!--
@@ -112,10 +111,10 @@ add "&raw" to the end of the URL within a browser.
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
-        query: {{ query|tojson }},
+        query: {{ params.query|tojson }},
         response: {{ result|tojson }},
-        variables: {{ variables|tojson }},
-        operationName: {{ operation_name|tojson }},
+        variables: {{ params.variables|tojson }},
+        operationName: {{ params.operation_name|tojson }},
       }),
       document.body
     );
@@ -124,9 +123,13 @@ add "&raw" to the end of the URL within a browser.
 </html>'''
 
 
-def render_graphiql(graphiql_version=None, graphiql_template=None, **kwargs):
+def render_graphiql(params, result, graphiql_version=None, graphiql_template=None):
     graphiql_version = graphiql_version or GRAPHIQL_VERSION
     template = graphiql_template or TEMPLATE
 
     return render_template_string(
-        template, graphiql_version=graphiql_version, **kwargs)
+        template,
+        graphiql_version=graphiql_version,
+        result=result,
+        params=params
+    )

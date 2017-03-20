@@ -376,12 +376,12 @@ def test_handles_errors_caused_by_a_lack_of_query(client):
     }
 
 
-def test_handles_invalid_json_bodies(client):
+def test_handles_batch_correctly_if_is_disabled(client):
     response = client.post(url_string(), data='[]', content_type='application/json')
 
     assert response.status_code == 400
     assert response_json(response) == {
-        'errors': [{'message': 'POST body sent invalid JSON.'}]
+        'errors': [{'message': 'Batch GraphQL requests are not enabled.'}]
     }
 
 
@@ -470,15 +470,17 @@ def test_post_multipart_data(client):
 def test_batch_allows_post_with_json_encoding(client):
     response = client.post(
         url_string(),
-        data=jl(id=1, query='{test}'),
+        data=jl(
+            # id=1,
+            query='{test}'
+        ),
         content_type='application/json'
     )
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
-        'payload': { 'data': {'test': "Hello World"} },
-        'status': 200,
+        # 'id': 1,
+        'data': {'test': "Hello World"}
     }]
 
 
@@ -487,7 +489,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
     response = client.post(
         url_string(),
         data=jl(
-            id=1,
+            # id=1,
             query='query helloWho($who: String){ test(who: $who) }',
             variables={'who': "Dolly"}
         ),
@@ -496,9 +498,8 @@ def test_batch_supports_post_json_query_with_json_variables(client):
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
-        'payload': { 'data': {'test': "Hello Dolly"} },
-        'status': 200,
+        # 'id': 1,
+        'data': {'test': "Hello Dolly"}
     }]
  
           
@@ -507,7 +508,7 @@ def test_batch_allows_post_with_operation_name(client):
     response = client.post(
         url_string(),
         data=jl(
-            id=1,
+            # id=1,
             query='''
             query helloYou { test(who: "You"), ...shared }
             query helloWorld { test(who: "World"), ...shared }
@@ -523,12 +524,9 @@ def test_batch_allows_post_with_operation_name(client):
 
     assert response.status_code == 200
     assert response_json(response) == [{
-        'id': 1,
-        'payload': {
-            'data': {
-                'test': 'Hello World',
-                'shared': 'Hello Everyone'
-            }
-        },
-        'status': 200,
+        # 'id': 1,
+        'data': {
+            'test': 'Hello World',
+            'shared': 'Hello Everyone'
+        }
     }]
