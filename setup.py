@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
 
-required_packages = ['graphql-core>=1.0', 'flask>=0.7.0']
+required_packages = [
+    'graphql-core>=1.0',
+    'flask>=0.7.0',
+    'graphql-server-core>=1.0.dev'
+]
 
 setup(
     name='Flask-GraphQL',
