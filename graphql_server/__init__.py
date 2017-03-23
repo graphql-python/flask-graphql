@@ -1,5 +1,5 @@
 import json
-from collections import namedtuple
+from collections import namedtuple, MutableMapping
 
 import six
 from promise import Promise
@@ -28,7 +28,7 @@ def default_format_error(error):
     return {'message': six.text_type(error)}
 
 
-def run_http_query(schema, request_method, data, query_data=None, batch_enabled=False, catch=None, **execute_options):
+def run_http_query(schema, request_method, data, query_data=None, batch_enabled=False, catch=False, **execute_options):
     if request_method not in ('get', 'post'):
         raise HttpQueryError(
             405,
@@ -37,14 +37,17 @@ def run_http_query(schema, request_method, data, query_data=None, batch_enabled=
                 'Allow': 'GET, POST'
             }
         )
-
+    if catch:
+        catch = HttpQueryError
+    else:
+        catch = SkipException
     is_batch = isinstance(data, list)
 
     is_get_request = request_method == 'get'
     allow_only_query = is_get_request
 
     if not is_batch:
-        if not isinstance(data, dict):
+        if not isinstance(data, (dict, MutableMapping)):
             raise HttpQueryError(
                 400,
                 'GraphQL params should be a dict. Received {}.'.format(data)
@@ -124,8 +127,6 @@ def get_graphql_params(data, query_data):
 
 
 def get_response(schema, params, catch=None, allow_only_query=False, **kwargs):
-    if catch is None:
-        catch = SkipException
     try:
         execution_result = execute_graphql_request(
             schema,

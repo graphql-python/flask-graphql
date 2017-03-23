@@ -438,7 +438,7 @@ def test_passes_request_into_request_context(client):
     }
 
 
-@pytest.mark.parametrize('app', [create_app(context="CUSTOM CONTEXT")])
+@pytest.mark.parametrize('app', [create_app(get_context=lambda:"CUSTOM CONTEXT")])
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query='{context}'))
 

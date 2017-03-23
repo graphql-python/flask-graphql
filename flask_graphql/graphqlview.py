@@ -15,7 +15,6 @@ class GraphQLView(View):
     schema = None
     executor = None
     root_value = None
-    context = None
     pretty = False
     graphiql = False
     graphiql_version = None
@@ -38,8 +37,6 @@ class GraphQLView(View):
         return self.root_value
 
     def get_context(self):
-        if self.context is not None:
-            return self.context
         return request
 
     def get_middleware(self):
@@ -65,7 +62,7 @@ class GraphQLView(View):
             data = self.parse_body()
 
             show_graphiql = request_method == 'get' and self.should_display_graphiql()
-            catch = HttpQueryError if show_graphiql else None
+            catch = show_graphiql
 
             pretty = self.pretty or show_graphiql or request.args.get('pretty')
 
@@ -97,8 +94,8 @@ class GraphQLView(View):
                 )
 
             return Response(
+                result,
                 status=status_code,
-                response=result,
                 content_type='application/json'
             )
 
