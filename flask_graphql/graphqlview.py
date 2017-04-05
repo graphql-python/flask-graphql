@@ -76,6 +76,8 @@ class GraphQLView(View):
             show_graphiql = self.graphiql and self.can_display_graphiql(data)
 
             if self.batch:
+                if not data:
+                    raise HttpError(BadRequest('Must have at least one query in batch'))
                 responses = [self.get_response(request, entry) for entry in data]
                 result = '[{}]'.format(','.join([response[0] for response in responses]))
                 status_code = max(responses, key=lambda response: response[1])[1]
