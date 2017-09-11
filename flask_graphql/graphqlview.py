@@ -19,6 +19,7 @@ class GraphQLView(View):
     graphiql = False
     graphiql_version = None
     graphiql_template = None
+    graphiql_html_title = None
     middleware = None
     batch = False
 
@@ -51,6 +52,7 @@ class GraphQLView(View):
             result=result,
             graphiql_version=self.graphiql_version,
             graphiql_template=self.graphiql_template,
+            graphiql_html_title=self.graphiql_html_title,
         )
 
     format_error = staticmethod(default_format_error)
