@@ -12,15 +12,15 @@ QueryRootType = GraphQLObjectType(
     fields={
         'thrower': GraphQLField(GraphQLNonNull(GraphQLString), resolver=resolve_raises),
         'request': GraphQLField(GraphQLNonNull(GraphQLString),
-                                resolver=lambda obj, args, context, info: context.args.get('q')),
+                                resolver=lambda obj, info: info.context.args.get('q')),
         'context': GraphQLField(GraphQLNonNull(GraphQLString),
-                                resolver=lambda obj, args, context, info: context),
+                                resolver=lambda obj, info: info.context),
         'test': GraphQLField(
             type=GraphQLString,
             args={
                 'who': GraphQLArgument(GraphQLString)
             },
-            resolver=lambda obj, args, context, info: 'Hello %s' % (args.get('who') or 'World')
+            resolver=lambda obj, info, who=None: 'Hello %s' % (who or 'World')
         )
     }
 )
