@@ -17,6 +17,7 @@ class GraphQLView(View):
     root_value = None
     pretty = False
     graphiql = False
+    backend = None
     graphiql_version = None
     graphiql_template = None
     graphiql_html_title = None
@@ -43,6 +44,9 @@ class GraphQLView(View):
     def get_middleware(self):
         return self.middleware
 
+    def get_backend(self):
+        return self.backend
+
     def get_executor(self):
         return self.executor
 
@@ -68,6 +72,13 @@ class GraphQLView(View):
 
             pretty = self.pretty or show_graphiql or request.args.get('pretty')
 
+            extra_options = {}
+            executor = self.get_executor()
+            if executor:
+                # We only include it optionally since
+                # executor is not a valid argument in all backends
+                extra_options['executor'] = executor
+
             execution_results, all_params = run_http_query(
                 self.schema,
                 request_method,
@@ -75,12 +86,13 @@ class GraphQLView(View):
                 query_data=request.args,
                 batch_enabled=self.batch,
                 catch=catch,
+                backend=self.get_backend(),
 
                 # Execute options
-                root_value=self.get_root_value(),
-                context_value=self.get_context(),
+                root=self.get_root_value(),
+                context=self.get_context(),
                 middleware=self.get_middleware(),
-                executor=self.get_executor(),
+                **extra_options
             )
             result, status_code = encode_execution_results(
                 execution_results,

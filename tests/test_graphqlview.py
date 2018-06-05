@@ -194,6 +194,19 @@ def test_allows_post_with_url_encoding(client):
     }
 
 
+# def test_benchmark(client, benchmark):
+#     url = url_string()
+#     data = urlencode(dict(query='{test}'))
+#     def fun():
+#         return client.post(url_string(), data=data, content_type='application/x-www-form-urlencoded')
+
+#     response = benchmark(fun)
+#     assert response.status_code == 200
+#     assert response_json(response) == {
+#         'data': {'test': "Hello World"}
+#     }
+
+
 def test_supports_post_json_query_with_string_variables(client):
     response = client.post(url_string(), data=j(
         query='query helloWho($who: String){ test(who: $who) }',
@@ -353,7 +366,7 @@ def test_handles_field_errors_caught_by_graphql(client):
     assert response.status_code == 200
     assert response_json(response) == {
         'data': None,
-        'errors': [{'locations': [{'column': 2, 'line': 1}], 'message': 'Throws!'}]
+        'errors': [{'locations': [{'column': 2, 'line': 1}], 'path': ['thrower'], 'message': 'Throws!'}]
     }
 
 
@@ -362,7 +375,7 @@ def test_handles_syntax_errors_caught_by_graphql(client):
     assert response.status_code == 400
     assert response_json(response) == {
         'errors': [{'locations': [{'column': 1, 'line': 1}],
-                    'message': 'Syntax Error GraphQL request (1:1) '
+                    'message': 'Syntax Error GraphQL (1:1) '
                                'Unexpected Name "syntaxerror"\n\n1: syntaxerror\n   ^\n'}]
     }
 
