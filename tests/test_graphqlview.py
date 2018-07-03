@@ -1,5 +1,6 @@
 import pytest
 import json
+import tempfile
 
 try:
     from StringIO import StringIO
@@ -465,18 +466,21 @@ def test_supports_pretty_printing(client):
 
 
 def test_post_multipart_data(client):
-    query = 'mutation TestMutation { writeTest { test } }'
-    response = client.post(
-        url_string(),
-        data= {
-            'query': query,
-            'file': (StringIO(), 'text1.txt'),
-        },
-        content_type='multipart/form-data'
-    )
-
+    query = 'mutation TestMutation($file: Upload!) { writeTest { testFile( what: $file ) } }'
+    with tempfile.NamedTemporaryFile() as t_file:
+        t_file.write(b'Fake Data\nLine2\n')
+        t_file.seek(0)
+        response = client.post(
+            url_string(),
+            data={
+                'operations': j(query=query, variables={'file': None}),
+                'file': t_file,
+                'map': j(file=["variables.file"]),
+            },
+            content_type='multipart/form-data'
+        )
     assert response.status_code == 200
-    assert response_json(response) == {'data': {u'writeTest': {u'test': u'Hello World'}}}
+    assert response_json(response) == {'data': {u'writeTest': {u'testFile': u'Fake Data\n'}}}
 
 
 @pytest.mark.parametrize('app', [create_app(batch=True)])
@@ -514,8 +518,8 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         # 'id': 1,
         'data': {'test': "Hello Dolly"}
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(
