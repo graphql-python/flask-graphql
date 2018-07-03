@@ -2,13 +2,13 @@ from functools import partial
 
 from flask import Response, request
 from flask.views import View
-
 from graphql.type.schema import GraphQLSchema
 from graphql_server import (HttpQueryError, default_format_error,
                             encode_execution_results, json_encode,
                             load_json_body, run_http_query)
 
 from .render_graphiql import render_graphiql
+from .utils import place_files_in_operations
 
 
 class GraphQLView(View):
@@ -135,9 +135,18 @@ class GraphQLView(View):
         elif content_type == 'application/json':
             return load_json_body(request.data.decode('utf8'))
 
-        elif content_type in ('application/x-www-form-urlencoded', 'multipart/form-data'):
+        elif content_type in 'application/x-www-form-urlencoded':
             return request.form
 
+        elif content_type == 'multipart/form-data':
+            operations = load_json_body(request.form['operations'])
+            files_map = load_json_body(request.form['map'])
+            new_ops = place_files_in_operations(
+                operations,
+                files_map,
+                request.files
+            )
+            return new_ops
         return {}
 
     def should_display_graphiql(self):
