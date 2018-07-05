@@ -524,6 +524,7 @@ def test_post_multipart_data_multi(client):
             }},
         ]
 
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_json_encoding(client):
     response = client.post(
