@@ -1,12 +1,13 @@
 def place_files_in_operations(operations, files_map, files):
-    paths_to_key = (
+    path_to_key_iter = (
         (value.split('.'), key)
         for key, values in files_map.items()
         for value in values
     )
-    output = new_merged_dict(operations)
-    output.update(operations)
-    for path, key in paths_to_key:
+    # Since add_files_to_operations returns a new dict/list, first define
+    # output to be operations itself
+    output = operations
+    for path, key in path_to_key_iter:
         file_obj = files[key]
         output = add_file_to_operations(output, file_obj, path)
     return output
