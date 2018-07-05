@@ -1,10 +1,19 @@
-from graphql.type.definition import GraphQLArgument, GraphQLField, GraphQLNonNull, GraphQLObjectType
+from graphql.type.definition import GraphQLArgument, GraphQLField, GraphQLNonNull, GraphQLObjectType, GraphQLList
 from graphql.type.scalars import GraphQLString, GraphQLScalarType
 from graphql.type.schema import GraphQLSchema
 
 
 def resolve_test_file(obj, info, what):
-    return what.readline().decode('utf-8')
+    output = what.readline().decode('utf-8')
+    what.seek(0)
+    return output
+
+
+def resolve_test_files(obj, info, whats):
+    output = ''.join(what.readline().decode('utf-8') for what in whats)
+    for what in whats:
+        what.seek(0)
+    return output
 
 
 def resolve_raises(*_):
@@ -42,6 +51,13 @@ QueryRootType = GraphQLObjectType(
             },
             resolver=resolve_test_file,
         ),
+        'testMultiFile': GraphQLField(
+            type=GraphQLString,
+            args={
+                'whats': GraphQLArgument(GraphQLNonNull(GraphQLList(GraphQLUpload))),
+            },
+            resolver=resolve_test_files,
+        )
     }
 )
 

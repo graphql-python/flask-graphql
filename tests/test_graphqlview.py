@@ -1,6 +1,6 @@
 import pytest
 import json
-import tempfile
+from tempfile import NamedTemporaryFile
 
 try:
     from StringIO import StringIO
@@ -467,21 +467,62 @@ def test_supports_pretty_printing(client):
 
 def test_post_multipart_data(client):
     query = 'mutation TestMutation($file: Upload!) { writeTest { testFile( what: $file ) } }'
-    with tempfile.NamedTemporaryFile() as t_file:
+    with NamedTemporaryFile() as t_file:
         t_file.write(b'Fake Data\nLine2\n')
         t_file.seek(0)
         response = client.post(
             url_string(),
             data={
                 'operations': j(query=query, variables={'file': None}),
-                'file': t_file,
-                'map': j(file=["variables.file"]),
+                't_file': t_file,
+                'map': j(t_file=["variables.file"]),
             },
             content_type='multipart/form-data'
         )
     assert response.status_code == 200
     assert response_json(response) == {'data': {u'writeTest': {u'testFile': u'Fake Data\n'}}}
 
+
+@pytest.mark.parametrize('app', [create_app(batch=True)])
+def test_post_multipart_data_multi(client):
+    query1 = '''
+    mutation TestMutation($file: Upload!) {
+      writeTest { testFile( what: $file ) }
+    }'''
+    query2 = '''
+    mutation TestMutation($files: [Upload]!) {
+      writeTest { testMultiFile( whats: $files ) }
+    }'''
+    with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+        tf1.write(b'tf1\nNot This line!!\n')
+        tf1.seek(0)
+        tf2.write(b'tf2\nNot This line!!\n')
+        tf2.seek(0)
+        response = client.post(
+            url_string(),
+            data={
+                'operations': json.dumps([
+                    {'query': query1, 'variables': {'file': None}},
+                    {'query': query2, 'variables': {'files': [None, None]}},
+                ]),
+                'tf1': tf1,
+                'tf2': tf2,
+                'map': j(
+                    tf1=['0.variables.file', '1.variables.files.0'],
+                    tf2=['1.variables.files.1'],
+                ),
+            },
+            content_type='multipart/form-data'
+        )
+        assert response.status_code == 200
+        assert response_json(response) == [
+            {'data': {
+                u'writeTest': {u'testFile': u'tf1\n'}
+            }},
+            {'data': {
+                u'writeTest': {u'testMultiFile': u'tf1\ntf2\n'}
+            }},
+        ]
 
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_json_encoding(client):
