@@ -2,6 +2,7 @@ from functools import partial
 
 from flask import Response, request
 from flask.views import View
+
 from graphql.type.schema import GraphQLSchema
 from graphql_server import (HttpQueryError, default_format_error,
                             encode_execution_results, json_encode,
