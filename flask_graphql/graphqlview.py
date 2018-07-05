@@ -142,12 +142,11 @@ class GraphQLView(View):
         elif content_type == 'multipart/form-data':
             operations = load_json_body(request.form['operations'])
             files_map = load_json_body(request.form['map'])
-            new_ops = place_files_in_operations(
+            return place_files_in_operations(
                 operations,
                 files_map,
                 request.files
             )
-            return new_ops
         return {}
 
     def should_display_graphiql(self):
