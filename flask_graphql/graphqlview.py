@@ -9,6 +9,7 @@ from graphql_server import (HttpQueryError, default_format_error,
                             load_json_body, run_http_query)
 
 from .render_graphiql import render_graphiql
+from .utils import place_files_in_operations
 
 
 class GraphQLView(View):
@@ -135,9 +136,17 @@ class GraphQLView(View):
         elif content_type == 'application/json':
             return load_json_body(request.data.decode('utf8'))
 
-        elif content_type in ('application/x-www-form-urlencoded', 'multipart/form-data'):
+        elif content_type == 'application/x-www-form-urlencoded':
             return request.form
 
+        elif content_type == 'multipart/form-data':
+            operations = load_json_body(request.form['operations'])
+            files_map = load_json_body(request.form['map'])
+            return place_files_in_operations(
+                operations,
+                files_map,
+                request.files
+            )
         return {}
 
     def should_display_graphiql(self):
