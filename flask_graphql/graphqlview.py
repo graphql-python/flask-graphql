@@ -136,7 +136,7 @@ class GraphQLView(View):
         elif content_type == 'application/json':
             return load_json_body(request.data.decode('utf8'))
 
-        elif content_type in 'application/x-www-form-urlencoded':
+        elif content_type == 'application/x-www-form-urlencoded':
             return request.form
 
         elif content_type == 'multipart/form-data':
