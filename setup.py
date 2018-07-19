@@ -4,7 +4,7 @@ required_packages = ["graphql-core>=2.1", "flask>=0.7.0", "graphql-server-core>=
 
 setup(
     name="Flask-GraphQL",
-    version="2.0",
+    version="2.0.0",
     description="Adds GraphQL support to your Flask application",
     long_description=open("README.rst").read(),
     url="https://github.com/graphql-python/flask-graphql",
