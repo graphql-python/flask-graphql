@@ -39,3 +39,101 @@ class UserRootValue(GraphQLView):
         return request.user
 
 ```
+
+### File upload support
+
+File uploads are supported via [multipart requests](https://github.com/jaydenseric/graphql-multipart-request-spec).
+
+You can simply define a ``FileUpload`` field in your schema, and use
+it to receive data from uploaded files.
+
+
+Example using ``graphql-core``:
+
+```python
+from collections import NamedTuple
+from graphql.type.definition import GraphQLScalarType
+
+
+GraphQLFileUpload = GraphQLScalarType(
+    name='FileUpload',
+    description='File upload',
+    serialize=lambda x: None,
+    parse_value=lambda value: value,
+    parse_literal=lambda node: None,
+)
+
+
+FileEchoResult = namedtuple('FileEchoResult', 'data,name,type')
+
+
+FileEchoResultSchema = GraphQLObjectType(
+    name='FileEchoResult,
+    fields={
+        'data': GraphQLField(GraphQLString),
+        'name': GraphQLField(GraphQLString),
+        'type': GraphQLField(GraphQLString),
+    }
+)
+
+
+def resolve_file_echo(obj, info, file):
+    data = file.stream.read().decode()
+    return FileEchoResult(
+        data=data,
+        name=file.filename,
+        type=file.content_type)
+
+
+MutationRootType = GraphQLObjectType(
+    name='MutationRoot',
+    fields={
+        # ...
+        'fileEcho': GraphQLField(
+            type=FileUploadTestResultSchema,
+            args={'file': GraphQLArgument(GraphQLFileUpload)},
+            resolver=resolve_file_echo,
+        ),
+        # ...
+    }
+)
+```
+
+
+Example using ``graphene``:
+
+```python
+import graphene
+
+class FileUpload(graphene.Scalar):
+
+    @staticmethod
+    def serialize(value):
+        return None
+
+    @staticmethod
+    def parse_literal(node):
+        return None
+
+    @staticmethod
+    def parse_value(value):
+        return value  # IMPORTANT
+
+
+class FileEcho(graphene.Mutation):
+
+    class Arguments:
+        myfile = FileUpload(required=True)
+
+    ok = graphene.Boolean()
+    name = graphene.String()
+    data = graphene.String()
+    type = graphene.String()
+
+    def mutate(self, info, myfile):
+        return FileEcho(
+            ok=True
+            name=myfile.filename
+            data=myfile.stream.read(),
+            type=myfile.content_type)
+```
