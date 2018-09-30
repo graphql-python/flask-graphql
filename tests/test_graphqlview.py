@@ -451,7 +451,7 @@ def test_passes_request_into_request_context(client):
     }
 
 
-@pytest.mark.parametrize('app', [create_app(get_context=lambda:"CUSTOM CONTEXT")])
+@pytest.mark.parametrize('app', [create_app(context="CUSTOM CONTEXT")])
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query='{context}'))
 
@@ -514,8 +514,8 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         # 'id': 1,
         'data': {'test': "Hello Dolly"}
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(

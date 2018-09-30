@@ -22,6 +22,7 @@ class GraphQLView(View):
     graphiql_template = None
     graphiql_html_title = None
     middleware = None
+    context = None
     batch = False
 
     methods = ['GET', 'POST', 'PUT', 'DELETE']
@@ -39,7 +40,7 @@ class GraphQLView(View):
         return self.root_value
 
     def get_context(self):
-        return request
+        return self.context or request
 
     def get_middleware(self):
         return self.middleware
