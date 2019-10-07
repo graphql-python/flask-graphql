@@ -141,10 +141,7 @@ class GraphQLView(View):
         return {}
 
     def should_display_graphiql(self):
-        if not self.graphiql or 'raw' in request.args:
-            return False
-
-        return self.request_wants_html()
+        return self.graphiql and 'raw' not in request.args and self.request_wants_html()
 
     def request_wants_html(self):
         best = request.accept_mimetypes \
