@@ -1,18 +1,26 @@
-import pytest
 import json
+from io import BytesIO
+
+import pytest
+
+from flask import url_for
+from flask_graphql.graphqlview import place_files_in_operations
+from werkzeug.test import EnvironBuilder
+
+from .app import create_app
 
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
 
+
+
 try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
 
-from .app import create_app
-from flask import url_for
 
 
 @pytest.fixture
@@ -465,18 +473,93 @@ def test_supports_pretty_printing(client):
 
 
 def test_post_multipart_data(client):
-    query = 'mutation TestMutation { writeTest { test } }'
+    query = """
+    mutation TestMutation($file: FileUpload!) {
+        fileUploadTest(file: $file) {
+            data, name, type
+        }
+    }
+    """
+
     response = client.post(
         url_string(),
-        data= {
-            'query': query,
-            'file': (StringIO(), 'text1.txt'),
-        },
-        content_type='multipart/form-data'
-    )
+        method='POST',
+        data={
+            # Form data
+            'operations': json.dumps({
+                'query': query,
+                'variables': {'file': None},
+            }),
+            'map': json.dumps({
+                '0': ['variables.file'],
+            }),
+            '0': (BytesIO(b'FILE-DATA-HERE'), 'hello.txt', 'text/plain'),
+        })
 
     assert response.status_code == 200
-    assert response_json(response) == {'data': {u'writeTest': {u'test': u'Hello World'}}}
+    assert response_json(response) == {
+        'data': {u'fileUploadTest': {
+            'data': u'FILE-DATA-HERE',
+            'name': 'hello.txt',
+            'type': 'text/plain',
+        }},
+    }
+
+
+def test_can_place_file_in_flat_variable():
+    operations = {
+        'variables': {'myfile': None},
+        "query": "QUERY",
+    }
+    files_map = {"0": ["variables.myfile"]}
+    files = {"0": "FILE-0-HERE"}
+
+    assert place_files_in_operations(operations, files_map, files) == {
+        'variables': {'myfile': "FILE-0-HERE"},
+        "query": "QUERY",
+    }
+
+
+def test_can_place_file_in_list_variable():
+    operations = {
+        'variables': {'myfile': [None]},
+        "query": "QUERY",
+    }
+    files_map = {"0": ["variables.myfile.0"]}
+    files = {"0": "FILE-0-HERE"}
+
+    assert place_files_in_operations(operations, files_map, files) == {
+        'variables': {'myfile': ["FILE-0-HERE"]},
+        "query": "QUERY",
+    }
+
+
+def test_can_place_file_in_flat_variable_in_ops_list():
+    operations = [{
+        'variables': {'myfile': None},
+        "query": "QUERY",
+    }]
+    files_map = {"0": ["0.variables.myfile"]}
+    files = {"0": "FILE-0-HERE"}
+
+    assert place_files_in_operations(operations, files_map, files) == [{
+        'variables': {'myfile': "FILE-0-HERE"},
+        "query": "QUERY",
+    }]
+
+
+def test_can_place_file_in_list_variable_in_ops_list():
+    operations = [{
+        'variables': {'myfile': [None]},
+        "query": "QUERY",
+    }]
+    files_map = {"0": ["0.variables.myfile.0"]}
+    files = {"0": "FILE-0-HERE"}
+
+    assert place_files_in_operations(operations, files_map, files) == [{
+        'variables': {'myfile': ["FILE-0-HERE"]},
+        "query": "QUERY",
+    }]
 
 
 @pytest.mark.parametrize('app', [create_app(batch=True)])
@@ -514,8 +597,8 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         # 'id': 1,
         'data': {'test': "Hello Dolly"}
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(
