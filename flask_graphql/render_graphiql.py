@@ -39,15 +39,15 @@ add "&raw" to the end of the URL within a browser.
       width: 100%;
     }
 '''
-T2 = f'''
+T2 = '''
   </style>
   <meta name="referrer" content="no-referrer">
-  <style>  { graphiql_css } </style>
-  <script> { fetch_min_js } </script>
-  <script> { react_min_js } </script>
-  <script> { react_dom_min_js } </script>
-  <script> { graphiql_min_js } </script>
-'''
+  <style>  %s </style>
+  <script> %s </script>
+  <script> %s </script>
+  <script> %s </script>
+  <script> %s </script>
+''' % (graphiql_css, fetch_min_js, react_min_js, react_dom_min_js, graphiql_min_js)
 
 T3 = '''
 </head>
