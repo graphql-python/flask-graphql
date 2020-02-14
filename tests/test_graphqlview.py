@@ -19,6 +19,7 @@ from flask import url_for
 def app():
     return create_app()
 
+
 def url_string(**url_params):
     string = url_for('graphql')
 
@@ -328,7 +329,7 @@ def test_allows_post_with_get_operation_name(client):
 
 
 @pytest.mark.parametrize('app', [create_app(pretty=True)])
-def test_supports_pretty_printing(client):
+def test_supports_pretty_printing(app, client):
     response = client.get(url_string(query='{test}'))
 
     assert response.data.decode() == (
@@ -341,7 +342,7 @@ def test_supports_pretty_printing(client):
 
 
 @pytest.mark.parametrize('app', [create_app(pretty=False)])
-def test_not_pretty_by_default(client):
+def test_not_pretty_by_default(app, client):
     response = client.get(url_string(query='{test}'))
 
     assert response.data.decode() == (
@@ -451,10 +452,9 @@ def test_passes_request_into_request_context(client):
     }
 
 
-@pytest.mark.parametrize('app', [create_app(get_context=lambda:"CUSTOM CONTEXT")])
-def test_supports_pretty_printing(client):
+@pytest.mark.parametrize('app', [create_app(get_context_value=lambda:"CUSTOM CONTEXT")])
+def test_supports_pretty_printing_with_custom_context(app, client):
     response = client.get(url_string(query='{context}'))
-
 
     assert response.status_code == 200
     assert response_json(response) == {
@@ -468,7 +468,7 @@ def test_post_multipart_data(client):
     query = 'mutation TestMutation { writeTest { test } }'
     response = client.post(
         url_string(),
-        data= {
+        data={
             'query': query,
             'file': (StringIO(), 'text1.txt'),
         },
@@ -480,7 +480,7 @@ def test_post_multipart_data(client):
 
 
 @pytest.mark.parametrize('app', [create_app(batch=True)])
-def test_batch_allows_post_with_json_encoding(client):
+def test_batch_allows_post_with_json_encoding(app, client):
     response = client.post(
         url_string(),
         data=jl(
@@ -498,7 +498,7 @@ def test_batch_allows_post_with_json_encoding(client):
 
 
 @pytest.mark.parametrize('app', [create_app(batch=True)])
-def test_batch_supports_post_json_query_with_json_variables(client):
+def test_batch_supports_post_json_query_with_json_variables(app, client):
     response = client.post(
         url_string(),
         data=jl(
@@ -514,10 +514,10 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         # 'id': 1,
         'data': {'test': "Hello Dolly"}
     }]
- 
-          
+
+
 @pytest.mark.parametrize('app', [create_app(batch=True)])
-def test_batch_allows_post_with_operation_name(client):
+def test_batch_allows_post_with_operation_name(app, client):
     response = client.post(
         url_string(),
         data=jl(
