@@ -23,7 +23,7 @@ def test_graphiql_renders_pretty(client):
         '    "test": "Hello World"\n'
         '  }\n'
         '}'
-    ).replace("\"","\\\"").replace("\n","\\n")
+    ).replace("\"", "\\\"").replace("\n", "\\n")
 
     assert pretty_response in response.data.decode('utf-8')
 
@@ -34,6 +34,6 @@ def test_graphiql_default_title(client):
 
 
 @pytest.mark.parametrize('app', [create_app(graphiql=True, graphiql_html_title="Awesome")])
-def test_graphiql_custom_title(client):
+def test_graphiql_custom_title(app, client):
     response = client.get(url_for('graphql'), headers={'Accept': 'text/html'})
     assert '<title>Awesome</title>' in response.data.decode('utf-8')
