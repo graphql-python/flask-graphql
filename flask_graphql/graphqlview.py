@@ -38,7 +38,7 @@ class GraphQLView(View):
     def get_root_value(self):
         return self.root_value
 
-    def get_context(self):
+    def get_context_value(self):
         return request
 
     def get_middleware(self):
@@ -89,8 +89,8 @@ class GraphQLView(View):
                 backend=self.get_backend(),
 
                 # Execute options
-                root=self.get_root_value(),
-                context=self.get_context(),
+                root_value=self.get_root_value(),
+                context_value=self.get_context_value(),
                 middleware=self.get_middleware(),
                 **extra_options
             )
