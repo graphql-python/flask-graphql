@@ -39,3 +39,6 @@ class UserRootValue(GraphQLView):
         return request.user
 
 ```
+
+## Contributing
+See [CONTRIBUTING.md](contributing.md)

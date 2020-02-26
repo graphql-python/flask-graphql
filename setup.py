@@ -1,12 +1,26 @@
 from setuptools import setup, find_packages
 
-required_packages = ["graphql-core>=2.1,<3", "flask>=0.7.0", "graphql-server-core>=1.1,<2"]
+install_requires = ["graphql-core>=2.1,<3", "flask>=0.7.0", "graphql-server-core>=1.1,<2"]
+
+tests_requires = [
+    'pytest >=2.7.2',
+    'pytest-flask >=0.10.0',
+    'graphql-core >=2.1,<3',
+    'graphql-server-core >=1.1,<2',
+    'Flask >=0.10.0',
+]
+
+dev_requires = [
+    'flake8==3.7.9',
+    'isort <4.0.0'
+] + tests_require
 
 setup(
     name="Flask-GraphQL",
     version="2.0.1",
     description="Adds GraphQL support to your Flask application",
-    long_description=open("README.rst").read(),
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     url="https://github.com/graphql-python/flask-graphql",
     download_url="https://github.com/graphql-python/flask-graphql/releases",
     author="Syrus Akbary",
@@ -29,8 +43,12 @@ setup(
     ],
     keywords="api graphql protocol rest flask",
     packages=find_packages(exclude=["tests"]),
-    install_requires=required_packages,
-    tests_require=["pytest>=2.7.3"],
+    install_requires=install_requires,
+    tests_require=tests_requires,
+    extras_require={
+        'test': tests_require,
+        'dev': dev_requires,
+    }
     include_package_data=True,
     zip_safe=False,
     platforms="any",

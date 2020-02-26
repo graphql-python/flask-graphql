@@ -1,5 +1,17 @@
 language: python
-sudo: false
+cache: pip
+dist: xenial
+
+install:
+  - pip install tox tox-travis
+
+script:
+  - tox
+
+after_success:
+  - pip install coveralls
+  - coveralls
+
 matrix:
   include:
   - python: pypy
@@ -12,16 +24,7 @@ matrix:
     env: TOX_ENV=py36
   - python: '3.6'
     env: TOX_ENV=import-order,flake8
-cache:
-  directories:
-  - $HOME/.cache/pip
-  - $TRAVIS_BUILD_DIR/.tox
-install:
-- pip install tox coveralls
-script:
-- tox -e $TOX_ENV -- --cov=flask_graphql
-after_success:
-- coveralls
+
 deploy:
   provider: pypi
   user: syrusakbary
