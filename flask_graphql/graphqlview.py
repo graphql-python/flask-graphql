@@ -2,11 +2,11 @@ from functools import partial
 
 from flask import Response, request
 from flask.views import View
-
-from graphql.type.schema import GraphQLSchema
 from graphql_server import (HttpQueryError, default_format_error,
                             encode_execution_results, json_encode,
                             load_json_body, run_http_query)
+
+from graphql.type.schema import GraphQLSchema
 
 from .render_graphiql import render_graphiql
 
