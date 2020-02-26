@@ -1,18 +1,22 @@
 from setuptools import setup, find_packages
 
-install_requires = ["graphql-core>=2.1,<3", "flask>=0.7.0", "graphql-server-core>=1.1,<2"]
+install_requires = [
+    "graphql-core>=2.3,<3",
+    "flask>=0.7.0",
+    "graphql-server-core>=1.1,<2",
+]
 
 tests_requires = [
-    'pytest >=2.7.2',
-    'pytest-flask >=0.10.0',
-    'graphql-core >=2.1,<3',
-    'graphql-server-core >=1.1,<2',
-    'Flask >=0.10.0',
+    'pytest>=2.7.2',
+    'pytest-flask>=0.10.0',
+    'graphql-core>=2.1,<3',
+    'graphql-server-core>=1.1,<2',
+    'Flask>=0.10.0',
 ]
 
 dev_requires = [
     'flake8==3.7.9',
-    'isort <4.0.0'
+    'isort<4.0.0'
 ] + tests_require
 
 setup(

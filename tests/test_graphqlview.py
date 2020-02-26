@@ -45,8 +45,12 @@ def response_json(response):
     return json.loads(response.data.decode())
 
 
-j = lambda **kwargs: json.dumps(kwargs)
-jl = lambda **kwargs: json.dumps([kwargs])
+def json_dump_kwarg(**kwargs):
+    return json.dumps(kwargs)
+
+
+def json_dump_kwarg_list(**kwargs):
+    return json.dumps([kwargs])
 
 
 def test_allows_get_with_query_param(app, client):
@@ -188,7 +192,7 @@ def test_allows_mutation_to_exist_within_a_get(app, client):
 
 
 def test_allows_post_with_json_encoding(app, client):
-    response = client.post(url_string(app), data=j(query='{test}'), content_type='application/json')
+    response = client.post(url_string(app), data=json_dump_kwarg(query='{test}'), content_type='application/json')
 
     assert response.status_code == 200
     assert response_json(response) == {
@@ -197,7 +201,7 @@ def test_allows_post_with_json_encoding(app, client):
 
 
 def test_allows_sending_a_mutation_via_post(app, client):
-    response = client.post(url_string(app), data=j(query='mutation TestMutation { writeTest { test } }'), content_type='application/json')
+    response = client.post(url_string(app), data=json_dump_kwarg(query='mutation TestMutation { writeTest { test } }'), content_type='application/json')
 
     assert response.status_code == 200
     assert response_json(response) == {
@@ -228,7 +232,7 @@ def test_allows_post_with_url_encoding(app, client):
 
 
 def test_supports_post_json_query_with_string_variables(app, client):
-    response = client.post(url_string(app), data=j(
+    response = client.post(url_string(app), data=json_dump_kwarg(
         query='query helloWho($who: String){ test(who: $who) }',
         variables=json.dumps({'who': "Dolly"})
     ), content_type='application/json')
@@ -240,7 +244,7 @@ def test_supports_post_json_query_with_string_variables(app, client):
 
 
 def test_supports_post_json_query_with_json_variables(app, client):
-    response = client.post(url_string(app), data=j(
+    response = client.post(url_string(app), data=json_dump_kwarg(
         query='query helloWho($who: String){ test(who: $who) }',
         variables={'who': "Dolly"}
     ), content_type='application/json')
@@ -267,7 +271,7 @@ def test_supports_post_json_quey_with_get_variable_values(app, client):
     response = client.post(url_string(
         app,
         variables=json.dumps({'who': "Dolly"})
-    ), data=j(
+    ), data=json_dump_kwarg(
         query='query helloWho($who: String){ test(who: $who) }',
     ), content_type='application/json')
 
@@ -307,7 +311,7 @@ def test_supports_post_raw_text_query_with_get_variable_values(app, client):
 
 
 def test_allows_post_with_operation_name(app, client):
-    response = client.post(url_string(app), data=j(
+    response = client.post(url_string(app), data=json_dump_kwarg(
         query='''
         query helloYou { test(who: "You"), ...shared }
         query helloWorld { test(who: "World"), ...shared }
@@ -508,7 +512,7 @@ def test_post_multipart_data(app, client):
 def test_batch_allows_post_with_json_encoding(app, client):
     response = client.post(
         url_string(app),
-        data=jl(
+        data=json_dump_kwarg_list(
             # id=1,
             query='{test}'
         ),
@@ -526,7 +530,7 @@ def test_batch_allows_post_with_json_encoding(app, client):
 def test_batch_supports_post_json_query_with_json_variables(app, client):
     response = client.post(
         url_string(app),
-        data=jl(
+        data=json_dump_kwarg_list(
             # id=1,
             query='query helloWho($who: String){ test(who: $who) }',
             variables={'who': "Dolly"}
@@ -545,7 +549,7 @@ def test_batch_supports_post_json_query_with_json_variables(app, client):
 def test_batch_allows_post_with_operation_name(app, client):
     response = client.post(
         url_string(app),
-        data=jl(
+        data=json_dump_kwarg_list(
             # id=1,
             query='''
             query helloYou { test(who: "You"), ...shared }
