@@ -8,6 +8,7 @@ install_requires = [
 
 tests_requires = [
     'pytest>=2.7.2',
+    'pytest-cov==2.8.1',
     'pytest-flask>=0.10.0',
     'graphql-core>=2.1,<3',
     'graphql-server-core>=1.1,<2',
@@ -17,7 +18,7 @@ tests_requires = [
 dev_requires = [
     'flake8==3.7.9',
     'isort<4.0.0'
-] + tests_require
+] + tests_requires
 
 setup(
     name="Flask-GraphQL",
@@ -50,9 +51,9 @@ setup(
     install_requires=install_requires,
     tests_require=tests_requires,
     extras_require={
-        'test': tests_require,
+        'test': tests_requires,
         'dev': dev_requires,
-    }
+    },
     include_package_data=True,
     zip_safe=False,
     platforms="any",
