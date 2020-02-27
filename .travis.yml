@@ -12,19 +12,6 @@ after_success:
   - pip install coveralls
   - coveralls
 
-matrix:
-  include:
-  - python: pypy
-    env: TOX_ENV=pypy
-  - python: '2.7'
-    env: TOX_ENV=py27
-  - python: '3.5'
-    env: TOX_ENV=py35
-  - python: '3.6'
-    env: TOX_ENV=py36
-  - python: '3.6'
-    env: TOX_ENV=import-order,flake8
-
 deploy:
   provider: pypi
   user: syrusakbary
