@@ -1,9 +1,15 @@
 language: python
+sudo: false
+python:
+  - 2.7
+  - 3.5
+  - 3.6
+  - 3.7
+  # - 3.8
 cache: pip
-dist: xenial
 
 install:
-  - pip install tox tox-travis
+  - pip install tox-travis
 
 script:
   - tox
