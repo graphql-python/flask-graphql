@@ -1,8 +1,20 @@
 # Flask-GraphQL
 
-[![Build Status](https://travis-ci.org/graphql-python/flask-graphql.svg?branch=master)](https://travis-ci.org/graphql-python/flask-graphql) [![Coverage Status](https://coveralls.io/repos/graphql-python/flask-graphql/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/flask-graphql?branch=master) [![PyPI version](https://badge.fury.io/py/flask-graphql.svg)](https://badge.fury.io/py/flask-graphql)
-
 Adds GraphQL support to your Flask application.
+
+[![travis][travis-image]][travis-url]
+[![pypi][pypi-image]][pypi-url]
+[![Anaconda-Server Badge][conda-image]][conda-url]
+[![coveralls][coveralls-image]][coveralls-url]
+
+[travis-image]: https://travis-ci.org/graphql-python/flask-graphql.svg?branch=master
+[travis-url]: https://travis-ci.org/graphql-python/flask-graphql
+[pypi-image]: https://img.shields.io/pypi/v/flask-graphql.svg?style=flat
+[pypi-url]: https://pypi.org/project/flask-graphql/
+[coveralls-image]: https://coveralls.io/repos/graphql-python/flask-graphql/badge.svg?branch=master&service=github
+[coveralls-url]: https://coveralls.io/github/graphql-python/flask-graphql?branch=master
+[conda-image]: https://img.shields.io/conda/vn/conda-forge/flask-graphql.svg
+[conda-url]: https://anaconda.org/conda-forge/flask-graphql
 
 ## Usage
 
@@ -41,4 +53,4 @@ class UserRootValue(GraphQLView):
 ```
 
 ## Contributing
-See [CONTRIBUTING.md](contributing.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
