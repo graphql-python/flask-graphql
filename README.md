@@ -53,4 +53,4 @@ class UserRootValue(GraphQLView):
 ```
 
 ## Contributing
-See [CONTRIBUTING.md](contributing.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
