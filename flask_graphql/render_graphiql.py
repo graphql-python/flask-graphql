@@ -1,6 +1,6 @@
 from flask import render_template_string
 
-GRAPHIQL_VERSION = '0.11.11'
+GRAPHIQL_VERSION = '0.17.5'
 
 TEMPLATE = '''<!--
 The request to this GraphQL server provided the header "Accept: text/html"
