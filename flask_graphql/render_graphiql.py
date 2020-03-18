@@ -1,8 +1,26 @@
 from flask import render_template_string
-
+import os
+this_py_file = os.path.realpath(__file__)
+this_dir = os.path.split(this_py_file)[0]
 GRAPHIQL_VERSION = '0.11.11'
 
-TEMPLATE = '''<!--
+with open(os.path.join(this_dir, 'fetch.min.js'), 'r') as js:
+    fetch_min_js =  js.read()
+
+with open(os.path.join(this_dir, 'react.min.js'), 'r') as js:
+    react_min_js = js.read()
+
+with open(os.path.join(this_dir, 'react-dom.min.js'), 'r') as js:
+    react_dom_min_js = js.read()
+
+with open(os.path.join(this_dir, 'graphiql.min.js'), 'r') as js:
+    graphiql_min_js = js.read()
+
+with open(os.path.join(this_dir, 'graphiql.css'), 'r') as css:
+    graphiql_css = css.read()
+
+
+T1 = '''<!--
 The request to this GraphQL server provided the header "Accept: text/html"
 and as a result has been presented GraphiQL - an in-browser IDE for
 exploring GraphQL.
@@ -20,13 +38,18 @@ add "&raw" to the end of the URL within a browser.
       overflow: hidden;
       width: 100%;
     }
+'''
+T2 = '''
   </style>
   <meta name="referrer" content="no-referrer">
-  <link href="//cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.css" rel="stylesheet" />
-  <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.min.js"></script>
+  <style>  %s </style>
+  <script> %s </script>
+  <script> %s </script>
+  <script> %s </script>
+  <script> %s </script>
+''' % (graphiql_css, fetch_min_js, react_min_js, react_dom_min_js, graphiql_min_js)
+
+T3 = '''
 </head>
 <body>
   <script>
@@ -123,6 +146,7 @@ add "&raw" to the end of the URL within a browser.
 </body>
 </html>'''
 
+TEMPLATE = T1 + T2 + T3
 
 def render_graphiql(params, result, graphiql_version=None,
                     graphiql_template=None, graphiql_html_title=None):
@@ -136,3 +160,11 @@ def render_graphiql(params, result, graphiql_version=None,
         result=result,
         params=params
     )
+
+if __name__ == '__main__':
+    print(fetch_min_js)
+    print(graphiql_css)
+    print(graphiql_min_js)
+    print(react_dom_min_js)
+    print(react_min_js)
+
