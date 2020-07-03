@@ -1,6 +1,6 @@
 from flask import render_template_string
 
-GRAPHIQL_VERSION = '0.11.11'
+GRAPHIQL_VERSION = '1.0.3'
 
 TEMPLATE = '''<!--
 The request to this GraphQL server provided the header "Accept: text/html"
@@ -24,9 +24,9 @@ add "&raw" to the end of the URL within a browser.
   <meta name="referrer" content="no-referrer">
   <link href="//cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.css" rel="stylesheet" />
   <script src="//cdn.jsdelivr.net/fetch/0.9.0/fetch.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react.min.js"></script>
-  <script src="//cdn.jsdelivr.net/react/15.0.0/react-dom.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react@16.12.0/umd/react.production.min.js"></script> 
+  <script crossorigin src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.production.min.js"></script> 
+  <script crossorigin src="https://unpkg.com/graphiql@{{graphiql_version}}/graphiql.min.js"></script> 
 </head>
 <body>
   <script>
@@ -116,6 +116,8 @@ add "&raw" to the end of the URL within a browser.
         response: {{ result|tojson }},
         variables: {{ params.variables|tojson }},
         operationName: {{ params.operation_name|tojson }},
+        headerEditorEnabled: true,
+        defaultVariableEditorOpen:true,
       }),
       document.body
     );
