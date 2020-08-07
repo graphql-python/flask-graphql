@@ -85,4 +85,4 @@ class UserRootValue(GraphQLView):
 ```
 
 ## Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+Since v3, `flask-graphql` code lives at [graphql-server](https://github.com/graphql-python/graphql-server) repository to keep any breaking change on the base package on sync with all other integrations. In order to contribute, please take a look at [CONTRIBUTING.md](https://github.com/graphql-python/graphql-server/blob/master/CONTRIBUTING.md).
