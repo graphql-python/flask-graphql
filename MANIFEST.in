@@ -1,14 +1,10 @@
 include LICENSE
 include README.md
-include CONTRIBUTING.md
 
-recursive-include flask_graphql/static *
-recursive-include flask_graphql/templates *
-recursive-include tests *.py
-
+include tox.ini
 include Makefile
 
-include .coveragerc
-include tox.ini
+recursive-include flask_graphql *.py
+recursive-include tests *.py
 
 global-exclude *.py[co] __pycache__

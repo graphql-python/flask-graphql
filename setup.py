@@ -1,28 +1,28 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "flask>=0.7.0",
-    "graphql-core>=2.3,<3",
-    "graphql-server-core>=1.1,<2",
+    "graphql-server[flask]>=3.0.0b1",
 ]
 
 tests_requires = [
-    'pytest>=2.7.2',
-    'pytest-cov==2.8.1',
-    'pytest-flask>=0.10.0',
+    "pytest>=5.4,<5.5",
+    "pytest-cov>=2.8,<3",
 ]
 
 dev_requires = [
-    'flake8==3.7.9',
-    'isort<4.0.0',
-    'check-manifest>=0.40,<1',
+    "flake8>=3.7,<4",
+    "isort>=4,<5",
+    "check-manifest>=0.40,<1",
 ] + tests_requires
+
+with open("README.md", encoding="utf-8") as readme_file:
+    readme = readme_file.read()
 
 setup(
     name="Flask-GraphQL",
     version="2.0.1",
     description="Adds GraphQL support to your Flask application",
-    long_description=open("README.md").read(),
+    long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/graphql-python/flask-graphql",
     download_url="https://github.com/graphql-python/flask-graphql/releases",
@@ -33,13 +33,9 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: Implementation :: PyPy",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
     ],
     keywords="api graphql protocol rest flask",
