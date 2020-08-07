@@ -1,4 +1,3 @@
-from .blueprint import GraphQL
-from .graphqlview import GraphQLView
+from graphql_server.flask.graphqlview import GraphQLView
 
-__all__ = ['GraphQL', 'GraphQLView']
+__all__ = ['GraphQLView']
