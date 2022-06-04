@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "graphql-server[flask]>=3.0.0b1",
+    "graphql-server[flask]>=3.0.0b5",
 ]
 
 tests_requires = [
