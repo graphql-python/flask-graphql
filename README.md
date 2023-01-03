@@ -26,6 +26,10 @@ pip install Flask-GraphQL
 - using `conda`:
 ```
 conda install -c conda-forge flask-graphql
+```
+or
+
+```
 conda install -c "conda-forge/label/cf202003" flask-graphql
 ```
 
