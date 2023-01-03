@@ -18,7 +18,12 @@ Adds GraphQL support to your Flask application.
 
 ## Usage
 
-Just use the `GraphQLView` view from `flask_graphql`
+First install this library using `pip`
+```
+pip install Flask-GraphQL
+```
+
+Then, just use the `GraphQLView` view from `flask_graphql`
 
 ```python
 from flask import Flask
