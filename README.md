@@ -16,6 +16,23 @@ Adds GraphQL support to your Flask application.
 [conda-image]: https://img.shields.io/conda/vn/conda-forge/flask-graphql.svg
 [conda-url]: https://anaconda.org/conda-forge/flask-graphql
 
+## Installation
+To install this package run one of the following:
+
+- using `pip`:
+```
+pip install Flask-GraphQL
+```
+- using `conda`:
+```
+conda install -c conda-forge flask-graphql
+```
+or
+
+```
+conda install -c "conda-forge/label/cf202003" flask-graphql
+```
+
 ## Usage
 
 Just use the `GraphQLView` view from `flask_graphql`
